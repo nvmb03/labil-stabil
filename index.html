@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labil–Stabil | Superhelden</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(48px, 10vw, 96px);
+            letter-spacing: 12px;
+            margin-bottom: 10px;
+            color: #ff0044;
+            text-shadow: 0 0 20px rgba(255, 0, 68, 0.5);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            margin-bottom: 60px;
+            opacity: 0.6;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .hero-link {
+            display: block;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .hero-link:hover::before {
+            left: 100%;
+        }
+
+        .hero-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-link.spiderman:hover {
+            border-color: #dc143c;
+            box-shadow: 0 10px 30px rgba(220, 20, 60, 0.3);
+        }
+
+        .hero-link.superman:hover {
+            border-color: #0050b4;
+            box-shadow: 0 10px 30px rgba(0, 80, 180, 0.3);
+        }
+
+        .hero-link.hulk:hover {
+            border-color: #32c832;
+            box-shadow: 0 10px 30px rgba(50, 200, 50, 0.3);
+        }
+
+        .hero-link.batman:hover {
+            border-color: #505050;
+            box-shadow: 0 10px 30px rgba(80, 80, 80, 0.3);
+        }
+
+        .hero-link.flash:hover {
+            border-color: #ffc800;
+            box-shadow: 0 10px 30px rgba(255, 200, 0, 0.3);
+        }
+
+        .hero-name {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .hero-trait {
+            display: block;
+            font-size: 11px;
+            opacity: 0.5;
+            text-transform: none;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .info-text {
+            font-size: 12px;
+            opacity: 0.4;
+            margin-top: 40px;
+            line-height: 1.8;
+        }
+
+        /* Animationen */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .subtitle {
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        .hero-link {
+            animation: fadeIn 0.6s ease-out backwards;
+        }
+
+        .hero-link:nth-child(1) { animation-delay: 0.3s; }
+        .hero-link:nth-child(2) { animation-delay: 0.4s; }
+        .hero-link:nth-child(3) { animation-delay: 0.5s; }
+        .hero-link:nth-child(4) { animation-delay: 0.6s; }
+        .hero-link:nth-child(5) { animation-delay: 0.7s; }
+
+        .info-text {
+            animation: fadeIn 1s ease-out 0.9s backwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LABIL–STABIL</h1>
+        <p class="subtitle">Tragische Superhelden-Sterne</p>
+        
+        <div class="hero-grid">
+            <a href="spiderman.html" class="hero-link spiderman">
+                <span class="hero-name">Spider-Man</span>
+                <span class="hero-trait">ADHS / Hyperfokus</span>
+            </a>
+            
+            <a href="superman.html" class="hero-link superman">
+                <span class="hero-name">Superman</span>
+                <span class="hero-trait">Sensorische Überlastung</span>
+            </a>
+            
+            <a href="hulk.html" class="hero-link hulk">
+                <span class="hero-name">Hulk</span>
+                <span class="hero-trait">Impulskontrolle</span>
+            </a>
+            
+            <a href="batman.html" class="hero-link batman">
+                <span class="hero-name">Batman</span>
+                <span class="hero-trait">Perfektionismus</span>
+            </a>
+            
+            <a href="flash.html" class="hero-link flash">
+                <span class="hero-name">Flash</span>
+                <span class="hero-trait">Entscheidungslähmung</span>
+            </a>
+        </div>
+
+        <p class="info-text">
+            Bewege die Maus · Klicke für Spezialfähigkeiten · Erlebe den tragischen Moment des Scheiterns
+        </p>
+    </div>
+</body>
+</html>
