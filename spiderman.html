@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spider-Man | Labil–Stabil</title>
+    
+    <!-- p5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script>
+        if (typeof p5 === 'undefined') {
+            document.write('<script src="p5.min.js"><\/script>');
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #fff;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        
+        /* Icons */
+        .icon-button {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .icon-button:hover {
+            background: rgba(220, 20, 60, 0.9);
+            border-color: #dc143c;
+            transform: scale(1.1);
+        }
+        
+        #backButton {
+            top: 20px;
+            left: 20px;
+        }
+        
+        #infoButton {
+            top: 20px;
+            right: 20px;
+        }
+        
+        /* Info Panel */
+        #infoPanel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            max-height: calc(100vh - 120px);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #dc143c;
+            border-left: 4px solid #dc143c;
+            padding: 25px;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            overflow-y: auto;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #infoPanel.active {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        #infoPanel h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #dc143c;
+            letter-spacing: 2px;
+        }
+        
+        #infoPanel h2 {
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #ff6b6b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #infoPanel p {
+            font-size: 12px;
+            line-height: 1.7;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+        
+        #infoPanel strong {
+            color: #dc143c;
+        }
+        
+        #infoPanel ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 15px;
+        }
+        
+        #infoPanel li {
+            font-size: 11px;
+            line-height: 1.6;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            opacity: 0.85;
+        }
+        
+        #infoPanel li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #dc143c;
+        }
+        
+        /* Scrollbar styling */
+        #infoPanel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #infoPanel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #infoPanel::-webkit-scrollbar-thumb {
+            background: #dc143c;
+            border-radius: 3px;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .icon-button {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        #backButton {
+            animation-delay: 0.1s;
+        }
+        
+        #infoButton {
+            animation-delay: 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="index.html" class="icon-button" id="backButton" title="Zurück zum Menü">
+        ←
+    </a>
+    
+    <!-- Info Button -->
+    <div class="icon-button" id="infoButton" title="Informationen">
+        i
+    </div>
+    
+    <!-- Info Panel -->
+    <div id="infoPanel">
+        <h1>SPIDER-MAN</h1>
+        
+        <p><strong>Neurodivergenz:</strong> ADHS / Hyperfokus</p>
+        
+        <h2>Steuerung</h2>
+        <ul>
+            <li><strong>Maus im äußeren Bereich</strong> = Automatisches Schwingen</li>
+            <li><strong>LEERTASTE</strong> = Sofortiger Netz-Schuss (überschreibt Timer)</li>
+            <li>Random Rhythmus: 0.33-1.0 Sek zwischen Schüssen</li>
+        </ul>
+        
+        <h2>Mechaniken</h2>
+        <ul>
+            <li>Automatisches Schwingen: Netz schießen → Warten → Neues Netz</li>
+            <li>Netze reißen nach 1.5-2 Sekunden (95% Wahrscheinlichkeit!)</li>
+            <li>Rhythmus kann durch Netz-Riss unterbrochen werden</li>
+        </ul>
+        
+        <h2>Panik-Explosion</h2>
+        <ul>
+            <li>Zufällige Aktivierung (20% Chance pro Sekunde)</li>
+            <li>Chaotische Netze in alle Richtungen</li>
+            <li>Nach 2 Sekunden: ALLE Netze reißen → Freier Fall!</li>
+        </ul>
+        
+        <h2>Fail-States</h2>
+        <ul>
+            <li><strong>Falling:</strong> Wenn alle Netze reißen</li>
+            <li><strong>Rolling:</strong> Am Boden mit Schwung ausrollen</li>
+            <li>Rotation basiert auf Aufprall-Geschwindigkeit</li>
+        </ul>
+        
+        <h2>Tragik</h2>
+        <p>Spider-Mans größte Stärke (Spinnensinn, der alles wahrnimmt) wird zur Schwäche. Er nimmt zu viel wahr und kann es nicht mehr filtern. Reizüberflutung führt zum totalen Kontrollverlust.</p>
+    </div>
+
+    <script>
+        // Info Panel Toggle
+        const infoButton = document.getElementById('infoButton');
+        const infoPanel = document.getElementById('infoPanel');
+        
+        infoButton.addEventListener('click', () => {
+            infoPanel.classList.toggle('active');
+        });
+        
+        // Schließen wenn außerhalb geklickt
+        document.addEventListener('click', (e) => {
+            if (!infoPanel.contains(e.target) && e.target !== infoButton) {
+                infoPanel.classList.remove('active');
+            }
+        });
+    </script>
+
+    <script>
+        // ============================================================================
+        // SPIDER-MAN - Multi-Web Swinging (VERBESSERTE MECHANIK)
+        // ============================================================================
+
+        // Stern Eigenschaften
+        let star_x = 960.0;
+        let star_y = 400.0;
+        let vx = 0.0;
+        let vy = 0.0;
+        const gravity = 0.34;  // 25% schwächer: 0.45 → 0.34
+        const friction = 0.98;
+        const bounce = 0.3;
+        const star_size = 30;  // Kleiner: 40 → 30
+
+        // Multi-Web System
+        let active_webs = [];
+        const max_webs = 2;  // Max 2 aktive Netze
+        let current_web_target_x = 0;
+        let current_web_target_y = 0;
+        let web_following_mouse = false;
+        let space_was_pressed = false;
+        const pull_strength = 0.60;  // Schwächer: 0.75 → 0.60
+        
+        // Swing-Rhythm System
+        let swing_timer = 0;
+        let swing_delay = 30;  // Wird random gesetzt
+        let can_shoot_web = true;
+
+        // Fail States
+        let fail_state = null;
+        let fail_timer = 0;
+        let fail_rotation_direction = 1.0;
+        let anger_particles = [];
+
+        // Panik-Explosion
+        let panic_explosion_active = false;
+        let panic_explosion_timer = 0;
+        const panic_explosion_duration = 120;
+        let panic_explosion_webs = [];
+        let panic_shot_timer = 0;
+        const panic_shot_delay = 3;
+
+        // Rotation beim Schwingen
+        let star_rotation = 0.0;
+
+        // Pre-calculate Stern Vertices
+        let star_vertices = [];
+
+        function precalculate_star(radius1, radius2, npoints) {
+            let vertices = [];
+            let angle = TWO_PI / npoints;
+            let half_angle = angle / 2.0;
+            
+            for (let a = 0; a < TWO_PI; a += angle) {
+                vertices.push([Math.cos(a) * radius2, Math.sin(a) * radius2]);
+                vertices.push([Math.cos(a + half_angle) * radius1, Math.sin(a + half_angle) * radius1]);
+            }
+            
+            return vertices;
+        }
+
+        function draw_web(start_x, start_y, end_x, end_y, break_progress = 0.0, has_spray = false) {
+            let dx_base = end_x - start_x;
+            let dy_base = end_y - start_y;
+            let length = Math.sqrt(dx_base * dx_base + dy_base * dy_base);
+            
+            if (length > 0) {
+                let dir_x = dx_base / length;
+                let dir_y = dy_base / length;
+                
+                let perp_x = -dir_y;
+                let perp_y = dir_x;
+                
+                // HAUPT-STRANG (Mitte)
+                let num_main_strands = 3;
+                
+                for (let strand = 0; strand < num_main_strands; strand++) {
+                    let phase = strand * (TWO_PI / num_main_strands);
+                    
+                    let gray = 170 + strand * 10;
+                    stroke(gray, gray, gray, 180);
+                    strokeWeight(strand > 0 ? 1 : 2);
+                    noFill();
+                    
+                    let num_points = Math.floor(length / 15) + 5;
+                    
+                    if (break_progress > 0) {
+                        let num_segments = 6;
+                        
+                        for (let i = 0; i < num_segments; i++) {
+                            if (i % 2 === 0) {
+                                let t1 = i / num_segments;
+                                let t2 = (i + 1) / num_segments;
+                                
+                                let x1 = start_x + dir_x * length * t1;
+                                let y1 = start_y + dir_y * length * t1;
+                                let offset1 = Math.sin(t1 * TWO_PI * 4 + phase) * (3 + strand * 0.5);
+                                x1 += perp_x * offset1;
+                                y1 += perp_y * offset1;
+                                
+                                let x2 = start_x + dir_x * length * t2;
+                                let y2 = start_y + dir_y * length * t2;
+                                let offset2 = Math.sin(t2 * TWO_PI * 4 + phase) * (3 + strand * 0.5);
+                                x2 += perp_x * offset2;
+                                y2 += perp_y * offset2;
+                                
+                                line(x1, y1, x2, y2);
+                            }
+                        }
+                    } else {
+                        beginShape();
+                        
+                        for (let i = 0; i < num_points; i++) {
+                            let t = i / (num_points - 1);
+                            
+                            let x = start_x + dir_x * length * t;
+                            let y = start_y + dir_y * length * t;
+                            
+                            let wave_freq = 4;
+                            let amplitude = 3 + strand * 0.5;
+                            
+                            let offset = Math.sin(t * TWO_PI * wave_freq + phase) * amplitude;
+                            
+                            x += perp_x * offset;
+                            y += perp_y * offset;
+                            
+                            x += random(-0.3, 0.3);
+                            y += random(-0.3, 0.3);
+                            
+                            vertex(x, y);
+                        }
+                        
+                        endShape();
+                    }
+                }
+                
+                // SPRAY-EFFEKT: Seitliche Stränge NUR AM ENDE (Impact-Point)
+                // NUR wenn has_spray flag gesetzt ist!
+                if (break_progress === 0 && has_spray) {  // Spray nur bei bestimmten Netzen!
+                    let num_spray_strands = 4;  // 2 pro Seite
+                    
+                    for (let side = -1; side <= 1; side += 2) {  // -1 = links, +1 = rechts
+                        for (let i = 0; i < num_spray_strands / 2; i++) {
+                            // Gleiche Farbe wie Haupt-Strang!
+                            let gray = 170 + i * 10;
+                            stroke(gray, gray, gray, 180);  // Gleiche Opazität!
+                            strokeWeight(1);
+                            
+                            // Stränge beginnen erst bei 70-80% der Länge (kurz vorm Rand!)
+                            let start_t = random(0.70, 0.80);
+                            let start_pos_x = start_x + dir_x * length * start_t;
+                            let start_pos_y = start_y + dir_y * length * start_t;
+                            
+                            // Breite am Start noch klein
+                            let spread_distance = (5 + i * 5) * side;
+                            
+                            // Ende ist am Rand (95-100%)
+                            let end_t = random(0.95, 1.0);
+                            let end_pos_x = start_x + dir_x * length * end_t;
+                            let end_pos_y = start_y + dir_y * length * end_t;
+                            
+                            // Starke Spreizung am Ende (Impact!)
+                            let end_spread = spread_distance * random(3, 5);
+                            
+                            // Zeichne gekrümmten Strang
+                            beginShape();
+                            let spray_points = 6;
+                            for (let j = 0; j <= spray_points; j++) {
+                                let t_local = j / spray_points;
+                                
+                                let x = lerp(start_pos_x, end_pos_x, t_local);
+                                let y = lerp(start_pos_y, end_pos_y, t_local);
+                                
+                                // Spreizung nimmt stark zu (exponentiell)
+                                let spread_factor = t_local * t_local;  // Quadratisch!
+                                let spread = lerp(spread_distance, end_spread, spread_factor);
+                                x += perp_x * spread;
+                                y += perp_y * spread;
+                                
+                                // Kleine Wellenbewegung
+                                x += Math.sin(t_local * TWO_PI * 2) * 1.5;
+                                y += Math.cos(t_local * TWO_PI * 2) * 1.5;
+                                
+                                vertex(x, y);
+                            }
+                            endShape();
+                        }
+                    }
+                }
+            }
+        }
+
+        function draw_star_optimized(x, y, vertices) {
+            beginShape();
+            for (let v of vertices) {
+                vertex(x + v[0], y + v[1]);
+            }
+            endShape(CLOSE);
+        }
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            star_x = width / 2;
+            star_y = 400;
+            star_vertices = precalculate_star(star_size * 0.4, star_size, 5);
+        }
+
+        function draw() {
+            background(255);
+            
+            // ====================
+            // PANIK-EXPLOSION CHECK
+            // ====================
+            
+            if (!panic_explosion_active && fail_state === null && frameCount % 60 === 0) {
+                if (random() < 0.05) {  // Seltener: 8% → 5% (~alle 20 Sekunden)
+                    panic_explosion_active = true;
+                    panic_explosion_timer = 0;
+                    panic_explosion_webs = [];
+                    panic_shot_timer = 0;
+                    fail_state = "panic_explosion";
+                    web_following_mouse = false;
+                }
+            }
+            
+            // PANIK-EXPLOSION
+            if (panic_explosion_active) {
+                panic_explosion_timer++;
+                panic_shot_timer++;
+                
+                if (panic_explosion_timer < 60 && panic_shot_timer >= panic_shot_delay) {
+                    let angle = random(TWO_PI);
+                    let dir_x = Math.cos(angle);
+                    let dir_y = Math.sin(angle);
+                    
+                    let t_values = [];
+                    
+                    if (dir_x > 0) {
+                        t_values.push((width - star_x) / dir_x);
+                    } else if (dir_x < 0) {
+                        t_values.push(-star_x / dir_x);
+                    }
+                    
+                    if (dir_y > 0) {
+                        t_values.push((height - star_y) / dir_y);
+                    } else if (dir_y < 0) {
+                        t_values.push(-star_y / dir_y);
+                    }
+                    
+                    if (t_values.length > 0) {
+                        let t_min = Math.min(...t_values.filter(t => t > 0));
+                        let target_x = star_x + dir_x * t_min;
+                        let target_y = star_y + dir_y * t_min;
+                        
+                        target_x = constrain(target_x, 0, width);
+                        target_y = constrain(target_y, 0, height);
+                        
+                        panic_explosion_webs.push({
+                            target_x: target_x,
+                            target_y: target_y,
+                            lifetime: 60
+                        });
+                    }
+                    
+                    panic_shot_timer = 0;
+                }
+                
+                panic_explosion_webs = panic_explosion_webs.filter(w => w.lifetime > 0);
+                for (let web of panic_explosion_webs) {
+                    web.lifetime--;
+                }
+                
+                if (panic_explosion_timer >= panic_explosion_duration) {
+                    panic_explosion_active = false;
+                    panic_explosion_webs = [];
+                    fail_state = "falling";
+                    fail_timer = 0;
+                    vx = random(-3, 3);
+                    vy = 0;
+                }
+            }
+            
+            // ====================
+            // WEB MANAGEMENT - RHYTHMISCHES SCHWINGEN
+            // ====================
+            
+            if (!panic_explosion_active && fail_state === null) {
+                swing_timer++;
+                
+                // Prüfe ob Maus im äußeren Bereich ist (30% vom Rand)
+                let edge_threshold = 0.3;  // 30% vom Rand
+                let left_threshold = width * edge_threshold;
+                let right_threshold = width * (1 - edge_threshold);
+                let top_threshold = height * edge_threshold;
+                let bottom_threshold = height * (1 - edge_threshold);
+                
+                let mouse_in_outer_area = (
+                    mouseX < left_threshold || 
+                    mouseX > right_threshold || 
+                    mouseY < top_threshold || 
+                    mouseY > bottom_threshold
+                );
+                
+                // LEERTASTE: Sofortiger Netz-Schuss (überschreibt Timer!)
+                let force_shoot = false;
+                if (keyIsPressed && key === ' ') {
+                    if (!space_was_pressed && mouse_in_outer_area) {
+                        force_shoot = true;
+                    }
+                    space_was_pressed = true;
+                } else {
+                    space_was_pressed = false;
+                }
+                
+                // Automatisches Schießen nach Pause ODER manueller Schuss
+                if ((swing_timer >= swing_delay || force_shoot) && can_shoot_web && mouse_in_outer_area) {
+                    // Berechne Richtung zur aktuellen Maus-Position
+                    let dx = mouseX - star_x;
+                    let dy = mouseY - star_y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 50) {  // Nur wenn Maus nicht zu nah
+                        // Normalisiere Richtung
+                        let dir_x = dx / distance;
+                        let dir_y = dy / distance;
+                        
+                        // Finde Schnittpunkt mit Bildschirmrand
+                        let t_values = [];
+                        
+                        if (dir_x > 0) {
+                            t_values.push((width - star_x) / dir_x);
+                        } else if (dir_x < 0) {
+                            t_values.push(-star_x / dir_x);
+                        }
+                        
+                        if (dir_y > 0) {
+                            t_values.push((height - star_y) / dir_y);
+                        } else if (dir_y < 0) {
+                            t_values.push(-star_y / dir_y);
+                        }
+                        
+                        if (t_values.length > 0) {
+                            let t_min = Math.min(...t_values.filter(t => t > 0));
+                            let target_x = star_x + dir_x * t_min;
+                            let target_y = star_y + dir_y * t_min;
+                            
+                            target_x = constrain(target_x, 0, width);
+                            target_y = constrain(target_y, 0, height);
+                            
+                            // VARIATION: Verschiebe Position entlang des Randes (±50-150 Pixel)
+                            let variation_distance = random(50, 150);
+                            
+                            // Finde heraus an welchem Rand wir sind
+                            let at_left = (target_x <= 1);
+                            let at_right = (target_x >= width - 1);
+                            let at_top = (target_y <= 1);
+                            let at_bottom = (target_y >= height - 1);
+                            
+                            // Verschiebe entlang des Randes
+                            if (at_left || at_right) {
+                                // Vertikale Ränder → verschiebe vertikal
+                                target_y += random(-variation_distance, variation_distance);
+                                target_y = constrain(target_y, 0, height);
+                            } else if (at_top || at_bottom) {
+                                // Horizontale Ränder → verschiebe horizontal
+                                target_x += random(-variation_distance, variation_distance);
+                                target_x = constrain(target_x, 0, width);
+                            }
+                            
+                            // Wenn bereits 2 Netze: Ältestes beginnt zu reißen
+                            if (active_webs.length >= max_webs) {
+                                // Finde ältestes Netz (das mit niedrigster lifetime)
+                                let oldest_web = active_webs[0];
+                                for (let web of active_webs) {
+                                    if (web.lifetime < oldest_web.lifetime) {
+                                        oldest_web = web;
+                                    }
+                                }
+                                oldest_web.fail_type = "break";
+                                oldest_web.fail_timer = 15;  // Schneller Riss für Flow
+                                oldest_web.break_progress = 0.0;
+                            }
+                            
+                            // NEUES Netz schießen
+                            let fail_roll = random();
+                            let web_fail_type = null;
+                            let web_fail_timer = 0;
+                            
+                            // NEUER FAIL: Netz erreicht Rand nicht! (15% Chance - ERHÖHT!)
+                            if (fail_roll < 0.15) {
+                                // Netz fliegt nur 40-70% der Strecke!
+                                let short_distance = random(0.4, 0.7);
+                                target_x = star_x + dir_x * t_min * short_distance;
+                                target_y = star_y + dir_y * t_min * short_distance;
+                                
+                                // Netz reißt SOFORT nach 10 Frames
+                                web_fail_type = "break";
+                                web_fail_timer = 10;
+                            } else if (fail_roll < 0.25) {  // 10% statt 20%!
+                                web_fail_type = "break";
+                                web_fail_timer = floor(random(30, 50));  // KÜRZER: 60-90 → 30-50 Frames (0.5-0.8 Sek)
+                            }
+                            // Sonst: 75% Chance dass Netz hält!
+                            
+                            active_webs.push({
+                                target_x: target_x,
+                                target_y: target_y,
+                                lifetime: 40,  // Noch schneller: 75 → 40 (~0.67 Sek)
+                                fail_type: web_fail_type,
+                                fail_timer: web_fail_timer,
+                                break_progress: 0.0,
+                                has_spray: random() < 0.4  // Nur 40% haben Spray-Effekt!
+                            });
+                            
+                            // Reset timer mit RANDOM Delay!
+                            swing_timer = 0;
+                            // Random zwischen 20-60 Frames (0.33-1 Sek)
+                            swing_delay = floor(random(20, 60));
+                        }
+                    }
+                }
+            }
+            
+            // Update anchored webs
+            for (let i = active_webs.length - 1; i >= 0; i--) {
+                let web = active_webs[i];
+                web.lifetime--;
+                
+                // RISS-ANIMATION wenn Lifetime fast abgelaufen
+                if (web.lifetime <= 20 && web.lifetime > 0 && web.fail_type !== "break") {
+                    // Netz beginnt zu reißen in den letzten 20 Frames
+                    web.break_progress = (20 - web.lifetime) / 20.0;
+                }
+                
+                if (web.fail_type === "break") {
+                    web.fail_timer--;
+                    if (web.fail_timer <= 0) {
+                        active_webs.splice(i, 1);
+                        if (fail_state === null && active_webs.length === 0) {
+                            fail_state = "falling";
+                            fail_timer = 0;
+                        }
+                        continue;
+                    } else if (web.fail_timer < 20) {
+                        web.break_progress = (20 - web.fail_timer) / 20.0;
+                    }
+                }
+                
+                if (web.lifetime <= 0) {
+                    active_webs.splice(i, 1);
+                }
+            }
+            
+            // ====================
+            // FAIL STATE MACHINE
+            // ====================
+            
+            if (fail_state === "panic_explosion") {
+                vx = 0;
+                vy = 0;
+                star_x += random(-2, 2);
+                star_y += random(-2, 2);
+            } else if (fail_state === "falling") {
+                fail_timer++;
+                vy += gravity;
+                star_rotation += 0.15;
+                vx *= 0.98;
+                
+                if (star_y >= height - star_size) {
+                    fail_state = "falling_angry";
+                    fail_timer = 0;
+                    star_y = height - star_size;
+                    vy = 0;
+                    fail_rotation_direction = vx >= 0 ? 1.0 : -1.0;
+                }
+            } else if (fail_state === "falling_angry") {
+                fail_timer++;
+                vx *= 0.88;  // Bremsreibung bleibt
+                vy = 0;  // Bleibt am Boden
+                
+                let rotation_rate = Math.abs(vx) * 0.08 * fail_rotation_direction;
+                star_rotation += rotation_rate;
+                
+                if (Math.abs(vx) < 0.2) {
+                    fail_state = null;
+                    fail_timer = 0;
+                    star_rotation = 0;
+                    // WICHTIG: Geschwindigkeit NICHT auf 0 setzen!
+                    // vx bleibt erhalten für smooth weiterschwingen
+                }
+            }
+            
+            // Update anger particles
+            anger_particles = anger_particles.filter(p => p.life > 0);
+            for (let p of anger_particles) {
+                p.life--;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+            }
+            
+            // ====================
+            // WEB PHYSICS
+            // ====================
+            
+            if (fail_state === null || fail_state === "panic_explosion") {
+                // Pull von allen anchored webs
+                for (let web of active_webs) {
+                    let dx = web.target_x - star_x;
+                    let dy = web.target_y - star_y;
+                    let dist_sq = dx * dx + dy * dy;
+                    
+                    if (dist_sq > 25) {
+                        let inv_dist = 1.0 / Math.sqrt(dist_sq);
+                        vx += dx * inv_dist * pull_strength;
+                        vy += dy * inv_dist * pull_strength;
+                    }
+                }
+                
+                // Rotation beim Schwingen
+                star_rotation = Math.atan2(vy, vx);
+            }
+            
+            // Gravity & Friction
+            if (fail_state === null) {
+                if (star_y < height - star_size) {
+                    vy += gravity;
+                }
+                vx *= friction;
+                vy *= friction;
+            }
+            
+            // Bewegung
+            star_x += vx;
+            star_y += vy;
+            
+            // Kollisionen
+            if (star_y > height - star_size) {
+                star_y = height - star_size;
+                vy *= -bounce;
+                if (Math.abs(vy) < 0.5) {
+                    vy = 0;
+                }
+            }
+            
+            if (star_x < star_size) {
+                star_x = star_size;
+                vx *= -bounce;
+            } else if (star_x > width - star_size) {
+                star_x = width - star_size;
+                vx *= -bounce;
+            }
+            
+            if (star_y < star_size) {
+                star_y = star_size;
+                vy *= -bounce;
+            }
+            
+            // ====================
+            // DRAWING
+            // ====================
+            
+            // Anger particles
+            for (let p of anger_particles) {
+                let alpha = (p.life / 30) * 240;
+                
+                push();
+                translate(p.x, p.y);
+                rotate(p.rotation);
+                
+                fill(255, 50, 50, alpha);
+                noStroke();
+                
+                beginShape();
+                for (let v of star_vertices) {
+                    vertex(v[0] * 0.7, v[1] * 0.7);
+                }
+                endShape(CLOSE);
+                
+                pop();
+            }
+            
+            // Panik-Netze (kein Spray)
+            for (let web of panic_explosion_webs) {
+                draw_web(star_x, star_y, web.target_x, web.target_y, 0.0, false);
+            }
+            
+            // Anchored webs zeichnen (mit has_spray flag!)
+            if (fail_state === null) {
+                for (let web of active_webs) {
+                    draw_web(star_x, star_y, web.target_x, web.target_y, web.break_progress || 0.0, web.has_spray || false);
+                }
+            }
+            
+            // Stretch-Effekt
+            let speed, angle, stretch_factor, compress_factor;
+            
+            if (fail_state === null) {
+                speed = Math.sqrt(vx * vx + vy * vy);
+                angle = star_rotation;
+                stretch_factor = Math.min(1 + (speed * 0.04), 1.4);
+                compress_factor = 1 / Math.sqrt(stretch_factor);
+            } else {
+                speed = 0;
+                angle = star_rotation;
+                stretch_factor = 1.0;
+                compress_factor = 1.0;
+            }
+            
+            // Stern zeichnen
+            push();
+            translate(star_x, star_y);
+            
+            if (fail_state === null) {
+                rotate(angle);
+                scale(stretch_factor, compress_factor);
+                rotate(-angle);
+            } else {
+                rotate(angle);
+            }
+            
+            fill(200, 19, 20);
+            noStroke();
+            
+            draw_star_optimized(0, 0, star_vertices);
+            
+            pop();
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+</body>
+</html>
