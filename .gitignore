@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Backup files
+*.bak
+*~
+
+# Logs
+*.log
+
+# Optional: Videos (falls sehr groß)
+*.mp4
+*.mov
+*.avi
