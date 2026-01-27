@@ -193,24 +193,28 @@
     <div id="infoPanel">
         <h1>FLASH</h1>
         
-        <p><strong>Neurodivergenz:</strong> Entscheidungslähmung / ADHS</p>
+        <p><strong>Neurodivergenz:</strong> Entscheidungsparalyse</p>
         
         <h2>Mechanik</h2>
         <ul>
-            <li>Warten (0.3 Sek)</li>
-            <li>Aufladen (0.8 Sek) → Leichtes Vibrieren</li>
-            <li>DASH! (0.15 Sek) → Extrem schnell zur Maus</li>
-            <li>Landen (0.2 Sek) → Kleiner Bounce</li>
+            <li>Zögern (0.5 Sek) → Überlegt...</li>
+            <li>Aufladen (1.5 Sek) → Denkt nach, langsame Rotation</li>
+            <li>Dash zur Maus → Aber oft zu spät oder falsch</li>
+            <li>50% Fail: Stolpern oder Rutschen</li>
         </ul>
         
-        <h2>Steuerung</h2>
+        <h2>Nach Fail</h2>
         <ul>
-            <li>Maus bewegen = Ziel setzen</li>
-            <li>Flash folgt automatisch im Rhythmus</li>
+            <li>Liegt frustriert (1 Sek)</li>
+            <li>Dreht sich langsam aus</li>
+            <li>Steht langsam auf (0.5 Sek)</li>
+            <li>Schüttelt Kopf langsam (0.75 Sek)</li>
+            <li>Still wütend (0.75 Sek)</li>
+            <li>Lange Pause (1.5 Sek) → Überlegt wieder...</li>
         </ul>
         
         <h2>Tragik</h2>
-        <p>Flash denkt blitzschnell und sieht alle Wege gleichzeitig. Doch im entscheidenden Moment lähmt ihn genau diese Geschwindigkeit – er kann keinen Weg wählen. Geschwindigkeit ohne Richtung ist Stillstand.</p>
+        <p>Flash denkt blitzschnell und sieht alle Wege gleichzeitig. Im entscheidenden Moment lähmt ihn genau diese Geschwindigkeit – zu viele Optionen, keine Entscheidung. Geschwindigkeit ohne Richtung ist Stillstand.</p>
     </div>
 
     <script>
@@ -239,19 +243,19 @@
         // Position
         let x, y;
         
-        // Stern-Form Parameter - Blitz-Style!
-        const points = 8;  // 8 Zacken = dynamischer, blitzartiger
-        const base_outer = 48.0;
-        const base_inner = 16.0;  // Sehr spitz für Blitz-Effekt
+        // Stern-Form Parameter - 4-Zacken Blitz-Stern!
+        const points = 4;  // 4 Zacken wie im Bild!
+        const base_outer = 50.0;
+        const base_inner = 15.0;  // Spitz aber nicht zu dünn
         let outer_radius = base_outer;
         let inner_radius = base_inner;
-        const variation = 7;  // Etwas Variation für organischen Blitz-Look
+        // KEINE VARIATION - perfekt symmetrisch!
         let offsets = [];
         
         // State Management
-        let state = "idle";  // States: idle, charging, dashing, stumbling, slipping, on_ground, spinning_down, getting_up, shaking, angry, pausing
+        let state = "idle";
         let state_timer = 0;
-        const charge_duration = 45;  // Noch schneller (0.75 Sekunden)
+        const charge_duration = 60;  // SCHNELLER: 75 → 60 Frames (1.0 Sek statt 1.25!)
         
         // Rotation
         let rotation = 0.0;
@@ -260,7 +264,7 @@
         // Bewegung
         let vx = 0.0;
         let vy = 0.0;
-        const dash_speed = 45.0;  // VIEL SCHNELLER! Flash = Speed!
+        const dash_speed = 35.0;  // LANGSAMER: 45 → 35 (nicht so hyperaktiv!)
         const friction = 0.94;
         
         // Morphing beim Aufladen
@@ -284,9 +288,9 @@
             x = width / 2;
             y = height / 2;
             
-            // Random Offsets für organischen Look
+            // PERFEKT SYMMETRISCH - keine random Offsets!
             for (let i = 0; i < points * 2; i++) {
-                offsets.push(random(-variation, variation));
+                offsets.push(0);  // Alle Offsets = 0 für perfekte Symmetrie!
             }
         }
 
@@ -299,15 +303,52 @@
 
         function updateFlash() {
             if (state === "idle") {
-                // Direkt zum Charging wechseln (nicht warten)
-                startCharging();
+                state_timer++;
+                
+                // KURZE Pause - SCHNELLER!
+                if (state_timer >= 15) {  // War 20 → jetzt 15 (0.25 Sek)
+                    startCharging();
+                }
             }
             else if (state === "charging") {
                 state_timer++;
                 
-                // Rotationsgeschwindigkeit erhöht sich beim Aufladen - LANGSAMER!
-                rotation_speed = (state_timer / charge_duration) * 0.15;  // War 0.5 → jetzt 0.15
-                rotation += rotation_speed;
+                // ANLAUF-ANIMATION: Wie einen Bogen spannen! 🏹
+                // Phase 1 (erste Hälfte): Zurückdrehen & Zurückziehen
+                // Phase 2 (zweite Hälfte): Bereit zum Schuss
+                
+                let charge_progress = state_timer / charge_duration;
+                
+                // Berechne Richtung ENTGEGENGESETZT zur Maus!
+                let dx_to_mouse = mouseX - x;
+                let dy_to_mouse = mouseY - y;
+                let dist = Math.sqrt(dx_to_mouse * dx_to_mouse + dy_to_mouse * dy_to_mouse);
+                
+                if (dist > 10) {  // Nur wenn Maus nicht zu nah
+                    let dir_x = dx_to_mouse / dist;
+                    let dir_y = dy_to_mouse / dist;
+                    
+                    if (charge_progress < 0.6) {
+                        // Phase 1: WINDUP - Dreht RÜCKWÄRTS & BEWEGT sich RÜCKWÄRTS!
+                        let windup_progress = charge_progress / 0.6;  // 0 bis 1
+                        
+                        // Rotation rückwärts
+                        rotation_speed = -0.12 * (1 - windup_progress);
+                        rotation += rotation_speed;
+                        
+                        // POSITION: Bewegt sich ENTGEGENGESETZT zur Maus!
+                        // Maximum bei 50% der windup phase
+                        let pullback_amount = Math.sin(windup_progress * PI) * 15;  // REDUZIERT: 25 → 15 Pixel!
+                        x -= dir_x * pullback_amount * 0.10;  // REDUZIERT: 0.15 → 0.10
+                        y -= dir_y * pullback_amount * 0.10;
+                        
+                    } else {
+                        // Phase 2: READY - Langsam vorwärts drehen (Position bleibt)
+                        let ready_progress = (charge_progress - 0.6) / 0.4;
+                        rotation_speed = 0.08 * ready_progress;
+                        rotation += rotation_speed;
+                    }
+                }
                 
                 // Charging abgeschlossen?
                 if (state_timer >= charge_duration) {
@@ -363,21 +404,15 @@
                     bounced = true;
                 }
                 
-                // Bei Bounce: Offsets leicht variieren
-                if (bounced) {
-                    for (let i = 0; i < offsets.length; i++) {
-                        offsets[i] += random(-1, 1);
-                        offsets[i] = constrain(offsets[i], -variation, variation);
-                    }
-                }
+                // KEINE Offset-Variation - bleibt symmetrisch!
                 
                 // Friction anwenden
                 vx *= friction;
                 vy *= friction;
                 
-                // Rotation basiert auf Geschwindigkeit - LANGSAMER!
+                // Rotation basiert auf Geschwindigkeit - SMOOTH!
                 let speed = Math.sqrt(vx * vx + vy * vy);
-                rotation_speed = (speed / dash_speed) * 0.08;  // War 0.3 → jetzt 0.08
+                rotation_speed = (speed / dash_speed) * 0.20;  // War 0.15 → jetzt 0.20 (smoother!)
                 rotation += rotation_speed;
                 
                 // Zum Stillstand gekommen? (Natürliches Abbremsen!)
@@ -385,8 +420,8 @@
                     // Wenn er gestolpert ist: Direkt zu on_ground (enttäuscht)
                     if (fail_type === "stumbled") {
                         state = "on_ground";
-                        fail_timer = 30;  // Frames auf dem Boden
-                        squash_amount = 0.7;  // Gequetscht
+                        fail_timer = 30;
+                        squash_amount = 1.0;  // KEINE Form-Änderung! ✅
                         vx = 0.0;
                         vy = 0.0;
                         trail_positions = [];
@@ -402,12 +437,18 @@
                 }
             }
             else if (state === "slipping") {
-                // SLIP-FAIL: Rutscht unkontrolliert, kann nicht bremsen
+                // SLIP-FAIL: Schwindelig! Verliert Gleichgewicht!
                 fail_timer++;
                 
-                // Bewegung (schneller als normal!)
+                // Bewegung mit WACKELIGER LINIE (schwindelig!)
                 x += vx;
                 y += vy;
+                
+                // SCHWINDEL-EFFEKT: Wackelige Bewegung!
+                let dizzy_wobble_x = Math.sin(fail_timer * 0.3) * 3;  // Sinus-Welle horizontal
+                let dizzy_wobble_y = Math.cos(fail_timer * 0.25) * 2.5;  // Cosinus-Welle vertikal
+                x += dizzy_wobble_x;
+                y += dizzy_wobble_y;
                 
                 // Trail
                 if (frameCount % 2 === 0) {
@@ -419,134 +460,162 @@
                     });
                 }
                 
-                // Wand-Bounce
+                // Wand-Bounce (weicher)
                 if (x < outer_radius || x > width - outer_radius) {
-                    vx *= -1;
+                    vx *= -0.7;
                 }
                 if (y < outer_radius || y > height - outer_radius) {
-                    vy *= -1;
+                    vy *= -0.7;
                 }
                 
                 // Cartoon-Slip: Kippt zur Seite (nur am Anfang)
                 if (fail_timer < 20) {
                     slip_offset += 0.08;
-                    slip_offset = Math.min(slip_offset, HALF_PI);  // Max 90 Grad
+                    slip_offset = Math.min(slip_offset, HALF_PI);
                 }
                 
-                // SMOOTHERE Friction: Gleitet LÄNGER aus
+                // SMOOTHERE Friction: Gleitet aus
                 let speed = Math.sqrt(vx * vx + vy * vy);
                 
-                if (fail_timer < 30) {
-                    // Phase 1: Versucht zu bremsen, aber schwer (wenig Friction)
-                    vx *= 0.985;
-                    vy *= 0.985;
+                if (fail_timer < 20) {
+                    // Phase 1: Versucht zu bremsen (mehr Friction als vorher)
+                    vx *= 0.96;
+                    vy *= 0.96;
                 } else {
                     // Phase 2: Bremst stärker ab
-                    vx *= 0.94;
-                    vy *= 0.94;
+                    vx *= 0.90;
+                    vy *= 0.90;
                 }
                 
-                // Rotation schnell - ABER LANGSAMER!
-                rotation += 0.12;  // War 0.4 → jetzt 0.12
+                // Rotation schnell - SCHWINDELIG!
+                rotation += 0.25;
                 
-                // Erst nach NATÜRLICHEM Abbremsen: Plumpst
-                if (speed < 0.8) {  // Niedriger threshold für smooth transition
-                    state = "on_ground";
+                // Erst nach NATÜRLICHEM Abbremsen UND genug Zeit: Zu spinning_down
+                if (speed < 0.5 && fail_timer > 30) {  // KEIN abrupter Stopp! Wartet länger!
+                    state = "spinning_down";
                     fail_timer = 0;
-                    vx = 0;
-                    vy = 0;
-                    squash_amount = 0.6;
-                    trail_positions = [];  // Trail löschen
+                    // vx, vy BLEIBEN! (nicht auf 0 setzen - Momentum bleibt!)
+                    squash_amount = 1.0;
+                    trail_positions = [];
                 }
             }
             else if (state === "on_ground") {
-                // AUF DEM BODEN: Liegt gequetscht
+                // AUF DEM BODEN: Liegt - KEINE Form-Änderung!
                 fail_timer++;
                 
-                // Squash-Effekt langsam zurück
-                squash_amount += (1.0 - squash_amount) * 0.05;
+                // Squash bleibt IMMER bei 1.0 (KEINE Form-Änderung!)
+                squash_amount = 1.0;
                 
-                // Nach 30 Frames: Anfangen auszudrehen
-                if (fail_timer > 30) {
+                // Schneller weiter - KÜRZER!
+                if (fail_timer > 12) {  // War 20 → jetzt 12! (0.2 Sek)
                     state = "spinning_down";
                     fail_timer = 0;
+                    squash_amount = 1.0;
                 }
             }
             else if (state === "spinning_down") {
-                // DREHT SICH AUS
+                // DREHT SICH AUS - kurz taumeln, dann an Ort und Stelle!
                 fail_timer++;
                 
-                // Rotation smooth zu 0 bringen
-                rotation_speed *= 0.92;
+                // Squash bleibt bei 1.0
+                squash_amount = 1.0;
+                
+                // TAUMEL-PHASE nur kurz am Anfang! (erste 15 Frames = ~0.25 Sek) - SCHNELLER!
+                if (fail_timer < 15) {  // War 18 → jetzt 15! ✅
+                    // TAUMELT wie Betrunkener!
+                    let wobble_x = Math.sin(fail_timer * 0.15) * 4;
+                    let wobble_y = Math.cos(fail_timer * 0.12) * 3.5;
+                    
+                    // Bewegt sich langsam PLUS Taumeln
+                    vx *= 0.93;  // Noch schneller abbremsen: 0.95 → 0.93
+                    vy *= 0.93;
+                    
+                    x += vx + wobble_x;
+                    y += vy + wobble_y;
+                    
+                    // Wand-Kollision (sanft)
+                    if (x < outer_radius) {
+                        x = outer_radius;
+                        vx *= -0.5;
+                    } else if (x > width - outer_radius) {
+                        x = width - outer_radius;
+                        vx *= -0.5;
+                    }
+                    
+                    if (y < outer_radius) {
+                        y = outer_radius;
+                        vy *= -0.5;
+                    } else if (y > height - outer_radius) {
+                        y = height - outer_radius;
+                        vy *= -0.5;
+                    }
+                } else {
+                    // Nach 15 Frames: STEHT STILL, dreht sich nur noch aus!
+                    vx = 0;
+                    vy = 0;
+                    // Nur Rotation, keine Bewegung mehr! ✅
+                }
+                
+                // Rotation SMOOTH zu 0 bringen
+                rotation_speed *= 0.97;
                 rotation += rotation_speed;
                 
                 // Slip-Offset auch zurück
                 if (slip_offset > 0.01) {
-                    slip_offset *= 0.88;
+                    slip_offset *= 0.95;
                 }
                 
-                // Wenn fast ausgedreht: Aufstehen
-                if (Math.abs(rotation_speed) < 0.02 || fail_timer > 60) {
+                // Wenn ausgedreht: Aufstehen - SCHNELLER!
+                if (Math.abs(rotation_speed) < 0.005 || fail_timer > 55) {  // War 70 → jetzt 55!
                     rotation_speed = 0.0;
                     slip_offset = 0.0;
+                    vx = 0.0;
+                    vy = 0.0;
                     state = "getting_up";
                     fail_timer = 0;
                 }
             }
             else if (state === "getting_up") {
-                // STEHT AUF
+                // STEHT AUF - SCHNELLER!
                 fail_timer++;
                 
-                // Größe normalisiert sich schneller
-                squash_amount += (1.0 - squash_amount) * 0.15;
+                // Squash bleibt bei 1.0
+                squash_amount = 1.0;
                 
-                // Nach 15 Frames: DIREKT zu Aufregen
-                if (fail_timer > 15) {
+                // SCHNELLER zu Shaking!
+                if (fail_timer > 12) {  // War 20 → jetzt 12!
                     state = "shaking";
                     fail_timer = 0;
                 }
             }
             else if (state === "shaking") {
-                // KOPF SCHÜTTELN
+                // KOPF SCHÜTTELN - SCHNELLER!
                 fail_timer++;
                 
-                // Nach 30 Frames: SOFORT zu Wut!
-                if (fail_timer > 30) {
+                // KÜRZER!
+                if (fail_timer > 20) {  // War 30 → jetzt 20!
                     state = "angry";
                     fail_timer = 0;
                 }
             }
             else if (state === "angry") {
-                // WUT AUSSTRÖMEN: Rote Silhouetten!
+                // WUT - SCHNELLER!
                 fail_timer++;
                 
-                // ANGER PARTICLES spawnen
-                if (fail_timer % 2 === 0 && fail_timer < 25) {
-                    let angle = random(TWO_PI);
-                    let speed_val = random(2.5, 5.0);
-                    anger_particles.push({
-                        x: x,
-                        y: y,
-                        vx: Math.cos(angle) * speed_val,
-                        vy: Math.sin(angle) * speed_val,
-                        life: 25,
-                        rotation: rotation + random(-0.3, 0.3)
-                    });
-                }
-                
-                // Nach 28 Frames: Pause
-                if (fail_timer > 28) {
+                // KÜRZER!
+                if (fail_timer > 20) {  // War 30 → jetzt 20!
                     state = "pausing";
                     fail_timer = 0;
                 }
             }
             else if (state === "pausing") {
-                // ZÖGERLICHE PAUSE
+                // PAUSE - SCHNELLER!
                 fail_timer++;
                 
-                // Nach 50 Frames: Zurück zu idle
-                if (fail_timer > 50) {
+                // KÜRZER!
+                if (fail_timer > 30) {  // War 40 → jetzt 30! (0.5 Sek)
                     state = "idle";
+                    state_timer = 0;
                     fail_type = null;
                     slip_offset = 0.0;
                     squash_amount = 1.0;
@@ -571,24 +640,14 @@
                     rotation_speed = 0.0;
                 }
             }
-            
-            // Anger particles update
-            anger_particles = anger_particles.filter(p => p.life > 0);
-            for (let p of anger_particles) {
-                p.life--;
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vx *= 0.95;
-                p.vy *= 0.95;
-            }
         }
 
         function startCharging() {
             state = "charging";
             state_timer = 0;
-            // Neue zufällige Form für diesen Aufladevorgang
-            target_outer = random(30, 50);
-            target_inner = random(12, target_outer * 0.6);
+            // MINIMALES Morphing - bleibt fast gleich!
+            target_outer = random(45, 52);  // Sehr wenig Variation: 45-52
+            target_inner = random(13, 17);  // Sehr wenig Variation: 13-17
         }
 
         function startDash() {
@@ -655,56 +714,58 @@
             // Squash-Effekt anwenden
             scale(1.0, squash_amount);
             
-            // Flash-Farbe: CRIMSON RED (#DC143C) wie im Bild!
-            fill(220, 20, 60, alpha);  // Crimson Red
+            // Flash-Farbe: CRIMSON RED (#DC143C)
+            fill(220, 20, 60, alpha);
             noStroke();
             
+            // 4-Zacken Stern mit SEHR RUNDEN Kurven (bezierVertex!)
             beginShape();
+            
+            // Berechne alle Punkte zuerst
+            let star_points = [];
             for (let i = 0; i < points * 2; i++) {
                 let angle = i * PI / points - HALF_PI;
-                let r = (i % 2 === 0) ? outer_radius : inner_radius;
-                r += offsets[i];
-                
-                let vx_point = Math.cos(angle) * r;
-                let vy_point = Math.sin(angle) * r;
-                vertex(vx_point, vy_point);
+                let is_outer = (i % 2 === 0);
+                let r = is_outer ? outer_radius : inner_radius;
+                r += offsets[i] || 0;
+                star_points.push({
+                    x: Math.cos(angle) * r,
+                    y: Math.sin(angle) * r
+                });
             }
+            
+            // Start
+            vertex(star_points[0].x, star_points[0].y);
+            
+            // Zeichne mit bezierVertex (ZWEI Control Points für starke Rundung!)
+            for (let i = 1; i < star_points.length; i++) {
+                let prev = star_points[i - 1];
+                let curr = star_points[i];
+                
+                // ZWEI Control Points für smooth cubic bezier!
+                let ctrl1_x = lerp(prev.x, curr.x, 0.4);  // Erster bei 40%
+                let ctrl1_y = lerp(prev.y, curr.y, 0.4);
+                
+                let ctrl2_x = lerp(prev.x, curr.x, 0.6);  // Zweiter bei 60%
+                let ctrl2_y = lerp(prev.y, curr.y, 0.6);
+                
+                bezierVertex(ctrl1_x, ctrl1_y, ctrl2_x, ctrl2_y, curr.x, curr.y);
+            }
+            
+            // Schließe Kurve zum Anfang
+            let last = star_points[star_points.length - 1];
+            let first = star_points[0];
+            let ctrl1_x = lerp(last.x, first.x, 0.4);
+            let ctrl1_y = lerp(last.y, first.y, 0.4);
+            let ctrl2_x = lerp(last.x, first.x, 0.6);
+            let ctrl2_y = lerp(last.y, first.y, 0.6);
+            bezierVertex(ctrl1_x, ctrl1_y, ctrl2_x, ctrl2_y, first.x, first.y);
+            
             endShape(CLOSE);
             pop();
         }
 
         function displayFlash() {
-            // ANGER PARTICLES (orange Silhouetten - Flash Wut!) - ZUERST
-            for (let p of anger_particles) {
-                let alpha = (p.life / 25) * 200;
-                
-                push();
-                translate(p.x, p.y);
-                rotate(p.rotation);
-                scale(1.0, squash_amount);
-                
-                // ORANGE für Flash-Ärger/Frust! (heller als rot)
-                fill(255, 140, 0, alpha);  // Orange
-                noStroke();
-                
-                // Kleinere Anger-Sterne
-                let anger_outer = outer_radius * 0.6;
-                let anger_inner = inner_radius * 0.6;
-                
-                beginShape();
-                for (let i = 0; i < points * 2; i++) {
-                    let angle = i * PI / points - HALF_PI;
-                    let r = (i % 2 === 0) ? anger_outer : anger_inner;
-                    r += offsets[i] * 0.6;
-                    
-                    let vx_point = Math.cos(angle) * r;
-                    let vy_point = Math.sin(angle) * r;
-                    vertex(vx_point, vy_point);
-                }
-                endShape(CLOSE);
-                pop();
-            }
-            
             // Trail zeichnen (helle gelbe Blitz-Silhouetten)
             for (let p of trail_positions) {
                 let alpha = (p.life / 15) * 180;  // Etwas transparenter
@@ -741,10 +802,10 @@
             let display_y = y;
             let extra_rotation = 0.0;
             
-            // Shake-Effekt (horizontal wackeln)
+            // Shake-Effekt (horizontal wackeln) - MEHR FRUSTRATION!
             if (state === "shaking") {
-                let shake_freq = 5;
-                let shake_amount = 18;
+                let shake_freq = 5;  // War 8 → jetzt 5 (schneller wackeln!)
+                let shake_amount = 18;  // War 10 → jetzt 18 (stärker wackeln!)
                 if (fail_timer < 30) {
                     display_x += Math.sin(fail_timer * PI / shake_freq) * shake_amount;
                 }
