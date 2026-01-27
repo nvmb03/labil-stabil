@@ -193,38 +193,40 @@
     <div id="infoPanel">
         <h1>SPIDER-MAN</h1>
         
-        <p><strong>Neurodivergenz:</strong> ADHS / Hyperfokus</p>
+        <p><strong>Neurodivergenz:</strong> ADHS / Impulsivität</p>
         
         <h2>Steuerung</h2>
         <ul>
             <li><strong>Maus im äußeren Bereich</strong> = Automatisches Schwingen</li>
-            <li><strong>LEERTASTE</strong> = Sofortiger Netz-Schuss (überschreibt Timer)</li>
-            <li>Random Rhythmus: 0.33-1.0 Sek zwischen Schüssen</li>
+            <li><strong>LEERTASTE</strong> = Impulsiver Sofort-Schuss</li>
+            <li>Unregelmäßiger Rhythmus: 0.33-1.0 Sek zwischen Schüssen</li>
         </ul>
         
         <h2>Mechaniken</h2>
         <ul>
-            <li>Automatisches Schwingen: Netz schießen → Warten → Neues Netz</li>
-            <li>Netze reißen nach 1.5-2 Sekunden (95% Wahrscheinlichkeit!)</li>
-            <li>Rhythmus kann durch Netz-Riss unterbrochen werden</li>
+            <li>Automatisches Schwingen mit instabilem Timing</li>
+            <li>Max 2 Netze gleichzeitig (ältestes beginnt zu reißen)</li>
+            <li>Netze halten nur ~0.67 Sekunden</li>
+            <li>40% der Netze haben Spray-Effekt am Rand</li>
         </ul>
         
-        <h2>Panik-Explosion</h2>
+        <h2>Impulsive Fails</h2>
         <ul>
-            <li>Zufällige Aktivierung (20% Chance pro Sekunde)</li>
-            <li>Chaotische Netze in alle Richtungen</li>
-            <li>Nach 2 Sekunden: ALLE Netze reißen → Freier Fall!</li>
+            <li><strong>15%:</strong> Netz zu kurz! (erreicht nur 40-70% der Strecke)</li>
+            <li><strong>10%:</strong> Netz reißt vorzeitig (nach 0.5-0.8 Sek)</li>
+            <li><strong>5% pro Sekunde:</strong> Panik-Explosion mit chaotischen Netzen in alle Richtungen</li>
+            <li><strong>75%:</strong> Netz hält (aber nur kurz!)</li>
         </ul>
         
         <h2>Fail-States</h2>
         <ul>
-            <li><strong>Falling:</strong> Wenn alle Netze reißen</li>
-            <li><strong>Rolling:</strong> Am Boden mit Schwung ausrollen</li>
-            <li>Rotation basiert auf Aufprall-Geschwindigkeit</li>
+            <li><strong>Panic Explosion:</strong> Unkontrolliertes Netz-Feuer → Fall</li>
+            <li><strong>Falling:</strong> Freier Fall mit Rotation</li>
+            <li><strong>Rolling:</strong> Frustriert am Boden ausrollen</li>
         </ul>
         
         <h2>Tragik</h2>
-        <p>Spider-Mans größte Stärke (Spinnensinn, der alles wahrnimmt) wird zur Schwäche. Er nimmt zu viel wahr und kann es nicht mehr filtern. Reizüberflutung führt zum totalen Kontrollverlust.</p>
+        <p>Spider-Man kann nicht warten, plant nicht voraus. Jeder Impuls wird sofort ausgeführt – zu schnell, zu kurz, zu chaotisch. Seine Reflexe sind perfekt, aber im kritischen Moment schießt er los bevor er nachdenkt. Impulsivität wird zum tödlichen Fall.</p>
     </div>
 
     <script>

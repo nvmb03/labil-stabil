@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash | Labil–Stabil</title>
+    
+    <!-- p5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script>
+        if (typeof p5 === 'undefined') {
+            document.write('<script src="p5.min.js"><\/script>');
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #ffebeb;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        
+        /* Icons */
+        .icon-button {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .icon-button:hover {
+            background: rgba(220, 20, 60, 0.9);  /* Crimson Red */
+            border-color: #DC143C;
+            transform: scale(1.1);
+        }
+        
+        #backButton {
+            top: 20px;
+            left: 20px;
+        }
+        
+        #infoButton {
+            top: 20px;
+            right: 20px;
+        }
+        
+        /* Info Panel */
+        #infoPanel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            max-height: calc(100vh - 120px);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #DC143C;  /* Crimson Red */
+            border-left: 4px solid #DC143C;
+            padding: 25px;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            overflow-y: auto;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #infoPanel.active {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        #infoPanel h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #DC143C;  /* Crimson Red */
+            letter-spacing: 2px;
+        }
+        
+        #infoPanel h2 {
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #FF8C00;  /* Dark Orange */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #infoPanel p {
+            font-size: 12px;
+            line-height: 1.7;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+        
+        #infoPanel strong {
+            color: #DC143C;  /* Crimson Red */
+        }
+        
+        #infoPanel ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 15px;
+        }
+        
+        #infoPanel li {
+            font-size: 11px;
+            line-height: 1.6;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            opacity: 0.85;
+        }
+        
+        #infoPanel li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #DC143C;  /* Crimson Red */
+        }
+        
+        /* Scrollbar styling */
+        #infoPanel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #infoPanel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #infoPanel::-webkit-scrollbar-thumb {
+            background: #DC143C;  /* Crimson Red */
+            border-radius: 3px;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .icon-button {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        #backButton {
+            animation-delay: 0.1s;
+        }
+        
+        #infoButton {
+            animation-delay: 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="index.html" class="icon-button" id="backButton" title="Zurück zum Menü">
+        ←
+    </a>
+    
+    <!-- Info Button -->
+    <div class="icon-button" id="infoButton" title="Informationen">
+        i
+    </div>
+    
+    <!-- Info Panel -->
+    <div id="infoPanel">
+        <h1>FLASH</h1>
+        
+        <p><strong>Neurodivergenz:</strong> Entscheidungslähmung / ADHS</p>
+        
+        <h2>Mechanik</h2>
+        <ul>
+            <li>Warten (0.3 Sek)</li>
+            <li>Aufladen (0.8 Sek) → Leichtes Vibrieren</li>
+            <li>DASH! (0.15 Sek) → Extrem schnell zur Maus</li>
+            <li>Landen (0.2 Sek) → Kleiner Bounce</li>
+        </ul>
+        
+        <h2>Steuerung</h2>
+        <ul>
+            <li>Maus bewegen = Ziel setzen</li>
+            <li>Flash folgt automatisch im Rhythmus</li>
+        </ul>
+        
+        <h2>Tragik</h2>
+        <p>Flash denkt blitzschnell und sieht alle Wege gleichzeitig. Doch im entscheidenden Moment lähmt ihn genau diese Geschwindigkeit – er kann keinen Weg wählen. Geschwindigkeit ohne Richtung ist Stillstand.</p>
+    </div>
+
+    <script>
+        // Info Panel Toggle
+        const infoButton = document.getElementById('infoButton');
+        const infoPanel = document.getElementById('infoPanel');
+        
+        infoButton.addEventListener('click', () => {
+            infoPanel.classList.toggle('active');
+        });
+        
+        // Schließen wenn außerhalb geklickt
+        document.addEventListener('click', (e) => {
+            if (!infoPanel.contains(e.target) && e.target !== infoButton) {
+                infoPanel.classList.remove('active');
+            }
+        });
+    </script>
+
+    <script>
+        // ============================================================================
+        // FLASH - Der Speedster-Stern (Python-Version übersetzt zu JavaScript)
+        // Signatur: Aufladen (Morphing) → Explosiver Dash → Bounce → Friction
+        // ============================================================================
+
+        // Position
+        let x, y;
+        
+        // Stern-Form Parameter - Blitz-Style!
+        const points = 8;  // 8 Zacken = dynamischer, blitzartiger
+        const base_outer = 48.0;
+        const base_inner = 16.0;  // Sehr spitz für Blitz-Effekt
+        let outer_radius = base_outer;
+        let inner_radius = base_inner;
+        const variation = 7;  // Etwas Variation für organischen Blitz-Look
+        let offsets = [];
+        
+        // State Management
+        let state = "idle";  // States: idle, charging, dashing, stumbling, slipping, on_ground, spinning_down, getting_up, shaking, angry, pausing
+        let state_timer = 0;
+        const charge_duration = 45;  // Noch schneller (0.75 Sekunden)
+        
+        // Rotation
+        let rotation = 0.0;
+        let rotation_speed = 0.0;
+        
+        // Bewegung
+        let vx = 0.0;
+        let vy = 0.0;
+        const dash_speed = 45.0;  // VIEL SCHNELLER! Flash = Speed!
+        const friction = 0.94;
+        
+        // Morphing beim Aufladen
+        let target_outer = base_outer;
+        let target_inner = base_inner;
+        const morph_speed = 0.12;
+        
+        // Trail für Motion Blur
+        let trail_positions = [];
+        
+        // Fail-States
+        let fail_type = null;  // "stumble" oder "slip"
+        let fail_timer = 0;
+        let fail_direction = 0.0;
+        let slip_offset = 0.0;  // Für Cartoon-Slip Rotation
+        let squash_amount = 1.0;  // Für Plumpsen (Größen-Multiplikator)
+        let anger_particles = [];  // Rote Silhouetten bei Frust
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            x = width / 2;
+            y = height / 2;
+            
+            // Random Offsets für organischen Look
+            for (let i = 0; i < points * 2; i++) {
+                offsets.push(random(-variation, variation));
+            }
+        }
+
+        function draw() {
+            background(245, 245, 245);  // Helles Grau - Stadt-Feeling
+            
+            updateFlash();
+            displayFlash();
+        }
+
+        function updateFlash() {
+            if (state === "idle") {
+                // Direkt zum Charging wechseln (nicht warten)
+                startCharging();
+            }
+            else if (state === "charging") {
+                state_timer++;
+                
+                // Rotationsgeschwindigkeit erhöht sich beim Aufladen - LANGSAMER!
+                rotation_speed = (state_timer / charge_duration) * 0.15;  // War 0.5 → jetzt 0.15
+                rotation += rotation_speed;
+                
+                // Charging abgeschlossen?
+                if (state_timer >= charge_duration) {
+                    startDash();
+                }
+            }
+            else if (state === "dashing") {
+                // STUMBLE-CHECK: Stolpert nach X Frames?
+                if (fail_type === "stumble" && fail_timer > 0) {
+                    fail_timer--;
+                    if (fail_timer === 0) {
+                        // STOLPERN! Geschwindigkeit drastisch reduzieren
+                        vx *= 0.3;
+                        vy *= 0.3;
+                        // Weiter dashing, bremst natürlich ab
+                        fail_type = "stumbled";  // Markiere als gestolpert
+                    }
+                }
+                
+                // Bewegung
+                x += vx;
+                y += vy;
+                
+                // Trail aufbauen (nur alle 2 Frames)
+                if (frameCount % 2 === 0) {
+                    trail_positions.push({
+                        x: x,
+                        y: y,
+                        life: 15,
+                        rotation: rotation
+                    });
+                }
+                
+                // Wand-Kollision (Bounce)
+                let bounced = false;
+                if (x < outer_radius) {
+                    x = outer_radius;
+                    vx = Math.abs(vx);
+                    bounced = true;
+                } else if (x > width - outer_radius) {
+                    x = width - outer_radius;
+                    vx = -Math.abs(vx);
+                    bounced = true;
+                }
+                
+                if (y < outer_radius) {
+                    y = outer_radius;
+                    vy = Math.abs(vy);
+                    bounced = true;
+                } else if (y > height - outer_radius) {
+                    y = height - outer_radius;
+                    vy = -Math.abs(vy);
+                    bounced = true;
+                }
+                
+                // Bei Bounce: Offsets leicht variieren
+                if (bounced) {
+                    for (let i = 0; i < offsets.length; i++) {
+                        offsets[i] += random(-1, 1);
+                        offsets[i] = constrain(offsets[i], -variation, variation);
+                    }
+                }
+                
+                // Friction anwenden
+                vx *= friction;
+                vy *= friction;
+                
+                // Rotation basiert auf Geschwindigkeit - LANGSAMER!
+                let speed = Math.sqrt(vx * vx + vy * vy);
+                rotation_speed = (speed / dash_speed) * 0.08;  // War 0.3 → jetzt 0.08
+                rotation += rotation_speed;
+                
+                // Zum Stillstand gekommen? (Natürliches Abbremsen!)
+                if (speed < 0.5) {
+                    // Wenn er gestolpert ist: Direkt zu on_ground (enttäuscht)
+                    if (fail_type === "stumbled") {
+                        state = "on_ground";
+                        fail_timer = 30;  // Frames auf dem Boden
+                        squash_amount = 0.7;  // Gequetscht
+                        vx = 0.0;
+                        vy = 0.0;
+                        trail_positions = [];
+                    } else {
+                        // Normal: Zurück zu idle
+                        state = "idle";
+                        vx = 0.0;
+                        vy = 0.0;
+                        trail_positions = [];
+                        target_outer = base_outer;
+                        target_inner = base_inner;
+                    }
+                }
+            }
+            else if (state === "slipping") {
+                // SLIP-FAIL: Rutscht unkontrolliert, kann nicht bremsen
+                fail_timer++;
+                
+                // Bewegung (schneller als normal!)
+                x += vx;
+                y += vy;
+                
+                // Trail
+                if (frameCount % 2 === 0) {
+                    trail_positions.push({
+                        x: x,
+                        y: y,
+                        life: 15,
+                        rotation: rotation
+                    });
+                }
+                
+                // Wand-Bounce
+                if (x < outer_radius || x > width - outer_radius) {
+                    vx *= -1;
+                }
+                if (y < outer_radius || y > height - outer_radius) {
+                    vy *= -1;
+                }
+                
+                // Cartoon-Slip: Kippt zur Seite (nur am Anfang)
+                if (fail_timer < 20) {
+                    slip_offset += 0.08;
+                    slip_offset = Math.min(slip_offset, HALF_PI);  // Max 90 Grad
+                }
+                
+                // SMOOTHERE Friction: Gleitet LÄNGER aus
+                let speed = Math.sqrt(vx * vx + vy * vy);
+                
+                if (fail_timer < 30) {
+                    // Phase 1: Versucht zu bremsen, aber schwer (wenig Friction)
+                    vx *= 0.985;
+                    vy *= 0.985;
+                } else {
+                    // Phase 2: Bremst stärker ab
+                    vx *= 0.94;
+                    vy *= 0.94;
+                }
+                
+                // Rotation schnell - ABER LANGSAMER!
+                rotation += 0.12;  // War 0.4 → jetzt 0.12
+                
+                // Erst nach NATÜRLICHEM Abbremsen: Plumpst
+                if (speed < 0.8) {  // Niedriger threshold für smooth transition
+                    state = "on_ground";
+                    fail_timer = 0;
+                    vx = 0;
+                    vy = 0;
+                    squash_amount = 0.6;
+                    trail_positions = [];  // Trail löschen
+                }
+            }
+            else if (state === "on_ground") {
+                // AUF DEM BODEN: Liegt gequetscht
+                fail_timer++;
+                
+                // Squash-Effekt langsam zurück
+                squash_amount += (1.0 - squash_amount) * 0.05;
+                
+                // Nach 30 Frames: Anfangen auszudrehen
+                if (fail_timer > 30) {
+                    state = "spinning_down";
+                    fail_timer = 0;
+                }
+            }
+            else if (state === "spinning_down") {
+                // DREHT SICH AUS
+                fail_timer++;
+                
+                // Rotation smooth zu 0 bringen
+                rotation_speed *= 0.92;
+                rotation += rotation_speed;
+                
+                // Slip-Offset auch zurück
+                if (slip_offset > 0.01) {
+                    slip_offset *= 0.88;
+                }
+                
+                // Wenn fast ausgedreht: Aufstehen
+                if (Math.abs(rotation_speed) < 0.02 || fail_timer > 60) {
+                    rotation_speed = 0.0;
+                    slip_offset = 0.0;
+                    state = "getting_up";
+                    fail_timer = 0;
+                }
+            }
+            else if (state === "getting_up") {
+                // STEHT AUF
+                fail_timer++;
+                
+                // Größe normalisiert sich schneller
+                squash_amount += (1.0 - squash_amount) * 0.15;
+                
+                // Nach 15 Frames: DIREKT zu Aufregen
+                if (fail_timer > 15) {
+                    state = "shaking";
+                    fail_timer = 0;
+                }
+            }
+            else if (state === "shaking") {
+                // KOPF SCHÜTTELN
+                fail_timer++;
+                
+                // Nach 30 Frames: SOFORT zu Wut!
+                if (fail_timer > 30) {
+                    state = "angry";
+                    fail_timer = 0;
+                }
+            }
+            else if (state === "angry") {
+                // WUT AUSSTRÖMEN: Rote Silhouetten!
+                fail_timer++;
+                
+                // ANGER PARTICLES spawnen
+                if (fail_timer % 2 === 0 && fail_timer < 25) {
+                    let angle = random(TWO_PI);
+                    let speed_val = random(2.5, 5.0);
+                    anger_particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed_val,
+                        vy: Math.sin(angle) * speed_val,
+                        life: 25,
+                        rotation: rotation + random(-0.3, 0.3)
+                    });
+                }
+                
+                // Nach 28 Frames: Pause
+                if (fail_timer > 28) {
+                    state = "pausing";
+                    fail_timer = 0;
+                }
+            }
+            else if (state === "pausing") {
+                // ZÖGERLICHE PAUSE
+                fail_timer++;
+                
+                // Nach 50 Frames: Zurück zu idle
+                if (fail_timer > 50) {
+                    state = "idle";
+                    fail_type = null;
+                    slip_offset = 0.0;
+                    squash_amount = 1.0;
+                }
+            }
+            
+            // Morphing smooth anwenden
+            outer_radius += (target_outer - outer_radius) * morph_speed;
+            inner_radius += (target_inner - inner_radius) * morph_speed;
+            
+            // Trail-Partikel updaten
+            trail_positions = trail_positions.filter(p => p.life > 0);
+            for (let p of trail_positions) {
+                p.life--;
+            }
+            
+            // Rotation ausdrehen wenn idle
+            if (state === "idle") {
+                rotation_speed *= 0.96;
+                rotation += rotation_speed;
+                if (Math.abs(rotation_speed) < 0.005) {
+                    rotation_speed = 0.0;
+                }
+            }
+            
+            // Anger particles update
+            anger_particles = anger_particles.filter(p => p.life > 0);
+            for (let p of anger_particles) {
+                p.life--;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+            }
+        }
+
+        function startCharging() {
+            state = "charging";
+            state_timer = 0;
+            // Neue zufällige Form für diesen Aufladevorgang
+            target_outer = random(30, 50);
+            target_inner = random(12, target_outer * 0.6);
+        }
+
+        function startDash() {
+            trail_positions = [];
+            
+            // FAIL-CHECK: 25% Stumble, 25% Slip (50% TOTAL)
+            let fail_roll = random();
+            
+            if (fail_roll < 0.25) {
+                // STUMBLE-FAIL
+                state = "dashing";
+                fail_type = "stumble";
+                fail_timer = floor(random(10, 25));
+            }
+            else if (fail_roll < 0.50) {
+                // SLIP-FAIL
+                state = "slipping";
+                fail_type = "slip";
+                fail_timer = 0;
+                slip_offset = 0.0;
+            }
+            else {
+                // NORMALER DASH (50%)
+                state = "dashing";
+                fail_type = null;
+            }
+            
+            // Richtung zur Maus berechnen
+            let dx = mouseX - x;
+            let dy = mouseY - y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 0) {
+                if (fail_type === "stumble") {
+                    // Leicht falsche Richtung (15-30 Grad Abweichung)
+                    let angle_offset = random(-0.5, 0.5);
+                    let angle = Math.atan2(dy, dx) + angle_offset;
+                    vx = Math.cos(angle) * dash_speed;
+                    vy = Math.sin(angle) * dash_speed;
+                    fail_direction = angle_offset;
+                }
+                else if (fail_type === "slip") {
+                    // Zu schnell! 150% Speed
+                    vx = (dx / dist) * dash_speed * 1.5;
+                    vy = (dy / dist) * dash_speed * 1.5;
+                }
+                else {
+                    // Normal
+                    vx = (dx / dist) * dash_speed;
+                    vy = (dy / dist) * dash_speed;
+                }
+            }
+            
+            // Zurück zur normalen Größe beim Dash
+            target_outer = base_outer;
+            target_inner = base_inner;
+        }
+
+        function drawStarShape(px, py, rot, alpha = 255) {
+            push();
+            translate(px, py);
+            rotate(rot);
+            
+            // Squash-Effekt anwenden
+            scale(1.0, squash_amount);
+            
+            // Flash-Farbe: CRIMSON RED (#DC143C) wie im Bild!
+            fill(220, 20, 60, alpha);  // Crimson Red
+            noStroke();
+            
+            beginShape();
+            for (let i = 0; i < points * 2; i++) {
+                let angle = i * PI / points - HALF_PI;
+                let r = (i % 2 === 0) ? outer_radius : inner_radius;
+                r += offsets[i];
+                
+                let vx_point = Math.cos(angle) * r;
+                let vy_point = Math.sin(angle) * r;
+                vertex(vx_point, vy_point);
+            }
+            endShape(CLOSE);
+            pop();
+        }
+
+        function displayFlash() {
+            // ANGER PARTICLES (orange Silhouetten - Flash Wut!) - ZUERST
+            for (let p of anger_particles) {
+                let alpha = (p.life / 25) * 200;
+                
+                push();
+                translate(p.x, p.y);
+                rotate(p.rotation);
+                scale(1.0, squash_amount);
+                
+                // ORANGE für Flash-Ärger/Frust! (heller als rot)
+                fill(255, 140, 0, alpha);  // Orange
+                noStroke();
+                
+                // Kleinere Anger-Sterne
+                let anger_outer = outer_radius * 0.6;
+                let anger_inner = inner_radius * 0.6;
+                
+                beginShape();
+                for (let i = 0; i < points * 2; i++) {
+                    let angle = i * PI / points - HALF_PI;
+                    let r = (i % 2 === 0) ? anger_outer : anger_inner;
+                    r += offsets[i] * 0.6;
+                    
+                    let vx_point = Math.cos(angle) * r;
+                    let vy_point = Math.sin(angle) * r;
+                    vertex(vx_point, vy_point);
+                }
+                endShape(CLOSE);
+                pop();
+            }
+            
+            // Trail zeichnen (helle gelbe Blitz-Silhouetten)
+            for (let p of trail_positions) {
+                let alpha = (p.life / 15) * 180;  // Etwas transparenter
+                
+                push();
+                translate(p.x, p.y);
+                rotate(p.rotation);
+                scale(1.0, squash_amount);
+                
+                // HELLES GELB für Blitz-Trail (#FFE55C)
+                fill(255, 229, 92, alpha);
+                noStroke();
+                
+                // Kleinere Trail-Sterne (70%)
+                let trail_outer = outer_radius * 0.7;
+                let trail_inner = inner_radius * 0.7;
+                
+                beginShape();
+                for (let i = 0; i < points * 2; i++) {
+                    let angle = i * PI / points - HALF_PI;
+                    let r = (i % 2 === 0) ? trail_outer : trail_inner;
+                    r += offsets[i] * 0.7;
+                    
+                    let vx_point = Math.cos(angle) * r;
+                    let vy_point = Math.sin(angle) * r;
+                    vertex(vx_point, vy_point);
+                }
+                endShape(CLOSE);
+                pop();
+            }
+            
+            // FAIL-EFFEKTE anwenden
+            let display_x = x;
+            let display_y = y;
+            let extra_rotation = 0.0;
+            
+            // Shake-Effekt (horizontal wackeln)
+            if (state === "shaking") {
+                let shake_freq = 5;
+                let shake_amount = 18;
+                if (fail_timer < 30) {
+                    display_x += Math.sin(fail_timer * PI / shake_freq) * shake_amount;
+                }
+            }
+            
+            // Slip-Offset (Cartoon-Kippung)
+            if (state === "slipping" || state === "on_ground") {
+                extra_rotation = slip_offset;
+            }
+            
+            // Haupt-Stern zeichnen
+            drawStarShape(display_x, display_y, rotation + extra_rotation);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+</body>
+</html>
