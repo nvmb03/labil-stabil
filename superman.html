@@ -230,7 +230,7 @@
                 // 5-zackiger Stern - obere Spitze zeigt nach oben (0°)
                 beginShape();
                 for (let i = 0; i < 10; i++) {
-                    let angle = TWO_PI / 10 * i - TWO_PI / 10;  // Start oben
+                    let angle = TWO_PI / 10 * i + TWO_PI / 20;  // Korrektur nach rechts
                     let r = (i % 2 === 0) ? this.size : this.size * 0.4;  // Lange/kurze Spitzen
                     let vx = Math.cos(angle) * r;
                     let vy = Math.sin(angle) * r;
@@ -248,19 +248,19 @@
                 
                 beginShape();
                 // Cape-Punkte (relativ zum Stern, nach unten/hinten zeigend)
-                vertex(-20, 10);
-                vertex(-30 + wave * 0.5, 30 + wave);
-                vertex(-40 + wave, 50 + wave * 1.5);
-                vertex(-45 + wave * 1.2, 70 + wave * 2);
-                vertex(-40 + wave * 0.8, 90 + wave * 1.8);
-                vertex(-20, 80 + wave * 1.2);
-                vertex(0, 85 + wave);
-                vertex(20, 80 + wave * 1.2);
-                vertex(40 + wave * 0.8, 90 + wave * 1.8);
-                vertex(45 + wave * 1.2, 70 + wave * 2);
-                vertex(40 + wave, 50 + wave * 1.5);
-                vertex(30 + wave * 0.5, 30 + wave);
-                vertex(20, 10);
+                vertex(-20, 0);
+                vertex(-30 + wave * 0.5, 20 + wave);
+                vertex(-40 + wave, 40 + wave * 1.5);
+                vertex(-45 + wave * 1.2, 60 + wave * 2);
+                vertex(-40 + wave * 0.8, 80 + wave * 1.8);
+                vertex(-20, 70 + wave * 1.2);
+                vertex(0, 75 + wave);
+                vertex(20, 70 + wave * 1.2);
+                vertex(40 + wave * 0.8, 80 + wave * 1.8);
+                vertex(45 + wave * 1.2, 60 + wave * 2);
+                vertex(40 + wave, 40 + wave * 1.5);
+                vertex(30 + wave * 0.5, 20 + wave);
+                vertex(20, 0);
                 endShape(CLOSE);
             }
             
