@@ -198,6 +198,19 @@
                 
                 // Stop-Distanz: Stoppt VOR der Maus!
                 this.stopDistance = 80;
+                
+                // Idle-Mechanik
+                this.idleTime = 0;
+                this.idleThreshold = 1;  // Frames bis idle (ca. 0.5 Sekunden)
+                this.isIdle = false;
+                
+                // Schwebe-Animation
+                this.hoverOffset = 0;
+                
+                // Geschwindigkeits-Tracking für Cape-Physik
+                this.velocity = 0;
+                this.lastX = x;
+                this.lastY = y;
             }
             
             update(targetX, targetY) {
@@ -206,24 +219,64 @@
                 let dy = targetY - this.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
                 
+                // Bewegungs-Check
+                let isMoving = false;
+                
                 // Wenn weiter als stopDistance: Bewegen!
                 if (dist > this.stopDistance) {
                     // Smooth easing, aber stoppt vorher
                     let easing = 0.05;
                     this.x += dx * easing;
                     this.y += dy * easing;
+                    isMoving = true;
                 }
                 
-                // Rotation: Obere Spitze zeigt IMMER zur Maus!
-                let targetAngle = Math.atan2(dy, dx) - HALF_PI;
+                // Geschwindigkeit berechnen (für Cape-Physik)
+                let vx = this.x - this.lastX;
+                let vy = this.y - this.lastY;
+                this.velocity = Math.sqrt(vx * vx + vy * vy);
+                this.lastX = this.x;
+                this.lastY = this.y;
+                
+                // Idle-Mechanik
+                if (isMoving || dist > this.stopDistance + 10) {
+                    // Bewegung: Idle-Timer zurücksetzen
+                    this.idleTime = 0;
+                    this.isIdle = false;
+                } else {
+                    // Stillstand: Idle-Timer hochzählen
+                    this.idleTime++;
+                    if (this.idleTime > this.idleThreshold) {
+                        this.isIdle = true;
+                    }
+                }
+                
+                // Rotation
+                let targetAngle;
+                
+                if (this.isIdle) {
+                    // Idle: Aufrecht schweben (Kopf/Spitze nach oben)
+                    targetAngle = PI;
+                } else {
+                    // Flug: Kopf/Spitze zeigt zur Maus
+                    targetAngle = Math.atan2(dy, dx) - HALF_PI;
+                }
                 
                 // Winkel normalisieren
                 let angleDiff = targetAngle - this.angle;
                 while (angleDiff > PI) angleDiff -= TWO_PI;
                 while (angleDiff < -PI) angleDiff += TWO_PI;
                 
-                // Smooth rotation
-                this.angle += angleDiff * 0.1;
+                // Smooth rotation - stabil und heldenhaft
+                let rotationSpeed = this.isIdle ? 0.02 : 0.12;
+                this.angle += angleDiff * rotationSpeed;
+                
+                // Schwebe-Animation im idle
+                if (this.isIdle) {
+                    this.hoverOffset = Math.sin(frameCount * 0.06) * 8;
+                } else {
+                    this.hoverOffset = 0;
+                }
             }
             
             drawStar() {
@@ -240,26 +293,38 @@
             }
             
             drawCape() {
-                // Cape-Animation mit Sinus-Welle (wie im Python-Code)
-                let wave = Math.sin(frameCount * 0.1) * 10;
+                // Cape-Animation - Flatter-Effekt mit Physik
+                // Geschwindigkeit beeinflusst Flattern (Wind-Widerstand)
+                let velocityFactor = Math.min(this.velocity * 2, 1);
+                
+                let waveIntensity = this.isIdle ? 5 : 8 + velocityFactor * 10;
+                let waveSpeed = this.isIdle ? 0.06 : 0.1 + velocityFactor * 0.05;
+                
+                // Gravity-Effekt: Cape hängt nach unten
+                let gravity = this.isIdle ? 5 : 2 + velocityFactor * 8;
+                
+                // Mehrere Wellen für realistisches Flattern
+                let wave1 = Math.sin(frameCount * waveSpeed) * waveIntensity;
+                let wave2 = Math.sin(frameCount * waveSpeed + 1) * waveIntensity * 0.7;
+                let wave3 = Math.sin(frameCount * waveSpeed + 2) * waveIntensity * 0.5;
                 
                 fill(200, 25, 45);  // Dunkleres Rot
                 noStroke();
                 
                 beginShape();
-                // Cape-Punkte (relativ zum Stern, nach unten/hinten zeigend)
+                // Cape-Punkte mit Wellen + Gravity (nach unten gezogen)
                 vertex(-20, 0);
-                vertex(-30 + wave * 0.5, 20 + wave);
-                vertex(-40 + wave, 40 + wave * 1.5);
-                vertex(-45 + wave * 1.2, 60 + wave * 2);
-                vertex(-40 + wave * 0.8, 80 + wave * 1.8);
-                vertex(-20, 70 + wave * 1.2);
-                vertex(0, 75 + wave);
-                vertex(20, 70 + wave * 1.2);
-                vertex(40 + wave * 0.8, 80 + wave * 1.8);
-                vertex(45 + wave * 1.2, 60 + wave * 2);
-                vertex(40 + wave, 40 + wave * 1.5);
-                vertex(30 + wave * 0.5, 20 + wave);
+                vertex(-30 + wave1 * 0.3, 20 + gravity * 0.2);
+                vertex(-40 + wave1 * 0.6, 40 + gravity * 0.4);
+                vertex(-45 + wave2 * 0.8, 60 + gravity * 0.6);
+                vertex(-40 + wave3, 80 + gravity * 0.8);
+                vertex(-20 + wave3 * 0.5, 70 + gravity * 0.9);
+                vertex(0 + wave3 * 0.3, 75 + gravity);
+                vertex(20 + wave3 * 0.5, 70 + gravity * 0.9);
+                vertex(40 + wave3, 80 + gravity * 0.8);
+                vertex(45 + wave2 * 0.8, 60 + gravity * 0.6);
+                vertex(40 + wave1 * 0.6, 40 + gravity * 0.4);
+                vertex(30 + wave1 * 0.3, 20 + gravity * 0.2);
                 vertex(20, 0);
                 endShape(CLOSE);
             }
@@ -267,7 +332,7 @@
             display() {
                 // Stern und Cape - MINIMALISTISCH!
                 push();
-                translate(this.x, this.y);
+                translate(this.x, this.y + this.hoverOffset);
                 
                 // Cape ZUERST (hinten) - 180° gedreht! (entgegengesetzt zum Kopf)
                 push();
