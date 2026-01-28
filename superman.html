@@ -211,6 +211,10 @@
                 this.velocity = 0;
                 this.lastX = x;
                 this.lastY = y;
+                
+                // Momentum für natürliche Bewegung
+                this.vx = 0;
+                this.vy = 0;
             }
             
             update(targetX, targetY) {
@@ -224,19 +228,44 @@
                 
                 // Wenn weiter als stopDistance: Bewegen!
                 if (dist > this.stopDistance) {
-                    // Smooth easing, aber stoppt vorher
+                    // Smooth easing wie vorher - schnelle Verfolgung
                     let easing = 0.05;
-                    this.x += dx * easing;
-                    this.y += dy * easing;
+                    let moveX = dx * easing;
+                    let moveY = dy * easing;
+                    
+                    this.x += moveX;
+                    this.y += moveY;
+                    
+                    // Velocity tracken
+                    this.vx = moveX;
+                    this.vy = moveY;
                     isMoving = true;
+                } else {
+                    // Maus steht: Sanftes Abbremsen mit Momentum
+                    // Im Idle-Mode viel schneller abbremsen für stabiles Cape
+                    let brakeFactor = this.isIdle ? 0.5 : 0.85;
+                    this.vx *= brakeFactor;
+                    this.vy *= brakeFactor;
+                    
+                    // Weiter gleiten mit Restgeschwindigkeit (nur wenn signifikant)
+                    if (Math.abs(this.vx) > 0.02 || Math.abs(this.vy) > 0.02) {
+                        this.x += this.vx;
+                        this.y += this.vy;
+                    } else {
+                        // Velocity sehr klein: Komplett auf 0 setzen für stabiles Cape
+                        this.vx = 0;
+                        this.vy = 0;
+                    }
+                    
+                    // Im idle sanft zurück zur richtigen Position
+                    if (this.isIdle && dist > this.stopDistance - 10) {
+                        this.x += dx * 0.005;
+                        this.y += dy * 0.005;
+                    }
                 }
                 
                 // Geschwindigkeit berechnen (für Cape-Physik)
-                let vx = this.x - this.lastX;
-                let vy = this.y - this.lastY;
-                this.velocity = Math.sqrt(vx * vx + vy * vy);
-                this.lastX = this.x;
-                this.lastY = this.y;
+                this.velocity = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
                 
                 // Idle-Mechanik
                 if (isMoving || dist > this.stopDistance + 10) {
@@ -268,15 +297,12 @@
                 while (angleDiff < -PI) angleDiff += TWO_PI;
                 
                 // Smooth rotation - stabil und heldenhaft
-                let rotationSpeed = this.isIdle ? 0.02 : 0.12;
+                let rotationSpeed = this.isIdle ? 0.045 : 0.12;
                 this.angle += angleDiff * rotationSpeed;
                 
-                // Schwebe-Animation im idle
-                if (this.isIdle) {
-                    this.hoverOffset = Math.sin(frameCount * 0.06) * 8;
-                } else {
-                    this.hoverOffset = 0;
-                }
+                // Schwebe-Animation im idle - smooth transition
+                let targetHoverOffset = this.isIdle ? Math.sin(frameCount * 0.06) * 8 : 0;
+                this.hoverOffset += (targetHoverOffset - this.hoverOffset) * 0.1;
             }
             
             drawStar() {
@@ -293,15 +319,28 @@
             }
             
             drawCape() {
-                // Cape-Animation - Flatter-Effekt mit Physik
-                // Geschwindigkeit beeinflusst Flattern (Wind-Widerstand)
-                let velocityFactor = Math.min(this.velocity * 2, 1);
+                // Cape-Animation - einheitliches Verhalten basierend auf Geschwindigkeit
+                // Basis-Werte für Cape im Stillstand
+                let baseWaveIntensity = 4;
+                let baseWaveSpeed = 0.06;
+                let baseGravity = 6;
                 
-                let waveIntensity = this.isIdle ? 5 : 8 + velocityFactor * 10;
-                let waveSpeed = this.isIdle ? 0.06 : 0.1 + velocityFactor * 0.05;
+                // Wenn idle: Cape komplett stabil (kein Jiggling)
+                if (this.isIdle) {
+                    this.capeVelocityFactor = 0;
+                } else {
+                    // Nur während Flug: Geschwindigkeit beeinflusst Cape
+                    let targetVelocityFactor = Math.min(this.velocity * 3, 1);
+                    if (!this.capeVelocityFactor) this.capeVelocityFactor = 0;
+                    this.capeVelocityFactor += (targetVelocityFactor - this.capeVelocityFactor) * 0.15;
+                }
                 
-                // Gravity-Effekt: Cape hängt nach unten
-                let gravity = this.isIdle ? 5 : 2 + velocityFactor * 8;
+                // Cape flattert etwas mehr bei Bewegung, aber nicht extrem
+                let waveIntensity = baseWaveIntensity + this.capeVelocityFactor * 4;
+                let waveSpeed = baseWaveSpeed + this.capeVelocityFactor * 0.04;
+                
+                // Gravity wird bei Bewegung weniger (Cape wird vom Wind getragen)
+                let gravity = baseGravity - this.capeVelocityFactor * 3;
                 
                 // Mehrere Wellen für realistisches Flattern
                 let wave1 = Math.sin(frameCount * waveSpeed) * waveIntensity;
