@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superman | Labil–Stabil</title>
+    
+    <!-- p5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script>
+        if (typeof p5 === 'undefined') {
+            document.write('<script src="p5.min.js"><\/script>');
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #F0F0F5;  /* Helles Grau-Blau */
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        
+        /* Icons */
+        .icon-button {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .icon-button:hover {
+            background: rgba(30, 80, 140, 0.9);  /* Tiefes Blau */
+            border-color: #1E508C;
+            transform: scale(1.1);
+        }
+        
+        #backButton {
+            top: 20px;
+            left: 20px;
+        }
+        
+        #infoButton {
+            top: 20px;
+            right: 20px;
+        }
+        
+        /* Info Panel */
+        #infoPanel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            max-height: calc(100vh - 120px);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #1E508C;  /* Tiefes Blau */
+            border-left: 4px solid #1E508C;
+            padding: 25px;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            overflow-y: auto;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #infoPanel.active {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        #infoPanel h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #1E508C;  /* Tiefes Blau */
+            letter-spacing: 2px;
+        }
+        
+        #infoPanel h2 {
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #C8192D;  /* Dunkleres Rot */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #infoPanel p {
+            font-size: 12px;
+            line-height: 1.7;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+        
+        #infoPanel strong {
+            color: #1E508C;  /* Tiefes Blau */
+        }
+        
+        #infoPanel ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        #infoPanel li {
+            font-size: 12px;
+            line-height: 1.7;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        #infoPanel li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #1E508C;  /* Tiefes Blau */
+        }
+        
+        /* Scrollbar styling */
+        #infoPanel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #infoPanel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #infoPanel::-webkit-scrollbar-thumb {
+            background: #1E508C;  /* Tiefes Blau */
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <a href="index.html" class="icon-button" id="backButton">←</a>
+    
+    <!-- Info Button -->
+    <div class="icon-button" id="infoButton">i</div>
+    
+    <!-- Info Panel -->
+    <div id="infoPanel">
+        <h1>SUPERMAN</h1>
+        
+        <p><strong>Neurodivergenz:</strong> Perfektionismus / Überverantwortung</p>
+        
+        <h2>Mechanik</h2>
+        <ul>
+            <li>Folgt der Maus mit smooth easing</li>
+            <li>Stoppt ein Stück VOR der Maus (nicht direkt drauf)</li>
+            <li>Obere Spitze zeigt IMMER zur Maus</li>
+            <li>Cape hängt zwischen zwei Zacken (gegenüber vom Kopf)</li>
+        </ul>
+        
+        <h2>Design</h2>
+        <ul>
+            <li>5-zackiger blauer Stern (#0050B4)</li>
+            <li>Rotes Cape (#DC143C) weht im Wind</li>
+            <li>Minimalistisch, keine Augen, keine Laser</li>
+            <li>Himmelblauer Hintergrund</li>
+        </ul>
+        
+        <h2>Tragik</h2>
+        <p>Superman will jeden retten, jeden Moment perfekt meistern. Doch je mehr er sich anstrengt, desto mehr entgleitet ihm die Kontrolle. Die Last der Welt auf seinen Schultern lähmt ihn, wenn es darauf ankommt.</p>
+    </div>
+
+    <script>
+        // p5.js Sketch
+        let star;
+        
+        class SupermanStar {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.angle = 0;  // Rotation des Sterns
+                this.size = 35;
+                
+                // Stop-Distanz: Stoppt VOR der Maus!
+                this.stopDistance = 80;
+            }
+            
+            update(targetX, targetY) {
+                // Richtung zur Maus
+                let dx = targetX - this.x;
+                let dy = targetY - this.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // Wenn weiter als stopDistance: Bewegen!
+                if (dist > this.stopDistance) {
+                    // Smooth easing, aber stoppt vorher
+                    let easing = 0.05;
+                    this.x += dx * easing;
+                    this.y += dy * easing;
+                }
+                
+                // Rotation: Obere Spitze zeigt IMMER zur Maus!
+                let targetAngle = Math.atan2(dy, dx) - HALF_PI;
+                
+                // Winkel normalisieren
+                let angleDiff = targetAngle - this.angle;
+                while (angleDiff > PI) angleDiff -= TWO_PI;
+                while (angleDiff < -PI) angleDiff += TWO_PI;
+                
+                // Smooth rotation
+                this.angle += angleDiff * 0.1;
+            }
+            
+            drawStar() {
+                // 5-zackiger Stern - obere Spitze zeigt nach oben (0°)
+                beginShape();
+                for (let i = 0; i < 10; i++) {
+                    let angle = TWO_PI / 10 * i - TWO_PI / 10;  // Start oben
+                    let r = (i % 2 === 0) ? this.size : this.size * 0.4;  // Lange/kurze Spitzen
+                    let vx = Math.cos(angle) * r;
+                    let vy = Math.sin(angle) * r;
+                    vertex(vx, vy);
+                }
+                endShape(CLOSE);
+            }
+            
+            drawCape() {
+                // Cape-Animation mit Sinus-Welle (wie im Python-Code)
+                let wave = Math.sin(frameCount * 0.1) * 10;
+                
+                fill(200, 25, 45);  // Dunkleres Rot
+                noStroke();
+                
+                beginShape();
+                // Cape-Punkte (relativ zum Stern, nach unten/hinten zeigend)
+                vertex(-20, 10);
+                vertex(-30 + wave * 0.5, 30 + wave);
+                vertex(-40 + wave, 50 + wave * 1.5);
+                vertex(-45 + wave * 1.2, 70 + wave * 2);
+                vertex(-40 + wave * 0.8, 90 + wave * 1.8);
+                vertex(-20, 80 + wave * 1.2);
+                vertex(0, 85 + wave);
+                vertex(20, 80 + wave * 1.2);
+                vertex(40 + wave * 0.8, 90 + wave * 1.8);
+                vertex(45 + wave * 1.2, 70 + wave * 2);
+                vertex(40 + wave, 50 + wave * 1.5);
+                vertex(30 + wave * 0.5, 30 + wave);
+                vertex(20, 10);
+                endShape(CLOSE);
+            }
+            
+            display() {
+                // Stern und Cape - MINIMALISTISCH!
+                push();
+                translate(this.x, this.y);
+                
+                // Cape ZUERST (hinten) - 180° gedreht! (entgegengesetzt zum Kopf)
+                push();
+                rotate(this.angle + PI);  // + PI = 180° entgegengesetzt!
+                this.drawCape();
+                pop();
+                
+                // Stern DARÜBER (vorne)
+                push();
+                rotate(this.angle);
+                fill(30, 80, 140);  // Tiefes Blau
+                noStroke();
+                this.drawStar();
+                pop();
+                
+                pop();
+            }
+        }
+        
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            star = new SupermanStar(width / 2, height / 2);
+        }
+        
+        function draw() {
+            background(240, 240, 245);  // Helles Grau-Blau - clean & minimalistisch
+            
+            // Superman updaten und zeichnen
+            star.update(mouseX, mouseY);
+            star.display();
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+
+    <script>
+        // Info Panel Toggle
+        const infoButton = document.getElementById('infoButton');
+        const infoPanel = document.getElementById('infoPanel');
+        
+        infoButton.addEventListener('click', () => {
+            infoPanel.classList.toggle('active');
+        });
+        
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!infoPanel.contains(e.target) && e.target !== infoButton) {
+                infoPanel.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
