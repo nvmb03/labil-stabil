@@ -163,26 +163,37 @@
     <div id="infoPanel">
         <h1>SUPERMAN</h1>
         
-        <p><strong>Neurodivergenz:</strong> Perfektionismus / Überverantwortung</p>
+        <p><strong>Neurodivergenz:</strong> Autismus / Hyperfokus</p>
         
-        <h2>Mechanik</h2>
+        <h2>Stabile Phase</h2>
         <ul>
-            <li>Folgt der Maus mit smooth easing</li>
-            <li>Stoppt ein Stück VOR der Maus (nicht direkt drauf)</li>
-            <li>Obere Spitze zeigt IMMER zur Maus</li>
-            <li>Cape hängt zwischen zwei Zacken (gegenüber vom Kopf)</li>
+            <li>Folgt der Maus elegant und kontrolliert</li>
+            <li>Stoppt vor der Maus (nicht direkt drauf)</li>
+            <li>Obere Spitze zeigt zur Maus</li>
+            <li>Cape weht sanft im Wind</li>
+        </ul>
+        
+        <h2>Labile Phase: Hyperfokus-Crash</h2>
+        <ul>
+            <li><strong>Random Trigger:</strong> 0.5% Chance pro Frame</li>
+            <li><strong>Fixierung:</strong> Ignoriert Maus, fixiert letzte Position</li>
+            <li><strong>Tunnel-Vision:</strong> Fliegt doppelt so schnell, kann nicht stoppen</li>
+            <li><strong>Cape-Panik:</strong> Flattert extrem während Hyperfokus</li>
+            <li><strong>Crash:</strong> Prallt realistisch von Wänden ab</li>
+            <li><strong>Shake:</strong> Wackelt 1 Sekunde (desorientiert)</li>
+            <li><strong>Recovery:</strong> Kehrt zur normalen Verfolgung zurück</li>
         </ul>
         
         <h2>Design</h2>
         <ul>
-            <li>5-zackiger blauer Stern (#0050B4)</li>
-            <li>Rotes Cape (#DC143C) weht im Wind</li>
-            <li>Minimalistisch, keine Augen, keine Laser</li>
+            <li>5-zackiger blauer Stern (#1E508C)</li>
+            <li>Rotes Cape (#C8192D) weht im Wind</li>
+            <li>Minimalistisch, keine Symbole</li>
             <li>Himmelblauer Hintergrund</li>
         </ul>
         
         <h2>Tragik</h2>
-        <p>Superman will jeden retten, jeden Moment perfekt meistern. Doch je mehr er sich anstrengt, desto mehr entgleitet ihm die Kontrolle. Die Last der Welt auf seinen Schultern lähmt ihn, wenn es darauf ankommt.</p>
+        <p>Superman ist unverwundbar – außer gegen seine eigene Fixierung. Wenn er sich auf ein Ziel fokussiert, gibt es kein Zurück. Seine größte Stärke (Fokus) wird zur tödlichen Schwäche: Er ignoriert Hindernisse, kann nicht abbiegen, rast blind ins Verderben. Hyperfokus wird zum Crash.</p>
     </div>
 
     <script>
@@ -193,87 +204,135 @@
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.angle = 0;  // Rotation des Sterns
+                this.angle = 0;
                 this.size = 35;
                 
-                // Stop-Distanz: Stoppt VOR der Maus!
+                // Stop-Distanz
                 this.stopDistance = 80;
                 
                 // Idle-Mechanik
                 this.idleTime = 0;
-                this.idleThreshold = 1;  // Frames bis idle (ca. 0.5 Sekunden)
+                this.idleThreshold = 10;  // Frames bis idle (erhöht: 1 → 10)
                 this.isIdle = false;
                 
                 // Schwebe-Animation
                 this.hoverOffset = 0;
                 
-                // Geschwindigkeits-Tracking für Cape-Physik
+                // Geschwindigkeits-Tracking
                 this.velocity = 0;
                 this.lastX = x;
                 this.lastY = y;
                 
-                // Momentum für natürliche Bewegung
+                // Momentum
                 this.vx = 0;
                 this.vy = 0;
+                
+                // ========== HYPERFOKUS-CRASH STATE MACHINE ==========
+                this.state = 'normal';  // normal | hyperfocus | crashed | shaking
+                
+                // Hyperfokus
+                this.hyperfocusTarget = { x: 0, y: 0 };
+                this.hyperfocusChance = 0.0035;  // 0.35% pro Frame (~alle 5 Sekunden)
+                
+                // Crash
+                this.crashRotation = 0;
+                this.crashRotationSpeed = 0;
+                
+                // Shaking
+                this.shakeTimer = 0;
+                this.shakeDuration = 60;  // 1 Sekunde bei 60 FPS
+                this.shakeIntensity = 0;
+                
+                // Recovery
+                this.justRecovered = false;
+                this.recoveryFrames = 0;
             }
             
             update(targetX, targetY) {
-                // Richtung zur Maus
+                // ========== STATE MACHINE ==========
+                
+                if (this.state === 'normal') {
+                    this.updateNormal(targetX, targetY);
+                    
+                    // Random Hyperfokus-Trigger NUR wenn NICHT idle!
+                    if (!this.isIdle && random() < this.hyperfocusChance) {
+                        this.triggerHyperfocus(targetX, targetY);
+                    }
+                    
+                } else if (this.state === 'hyperfocus') {
+                    this.updateHyperfocus();
+                    
+                } else if (this.state === 'crashed') {
+                    this.updateCrashed();
+                    
+                } else if (this.state === 'shaking') {
+                    this.updateShaking();
+                }
+                
+                // Geschwindigkeit berechnen
+                this.velocity = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            }
+            
+            // ========== NORMAL STATE ==========
+            updateNormal(targetX, targetY) {
                 let dx = targetX - this.x;
                 let dy = targetY - this.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
                 
-                // Bewegungs-Check
                 let isMoving = false;
                 
-                // Wenn weiter als stopDistance: Bewegen!
+                // Sanfter Start nach Recovery (erste 30 Frames)
+                if (this.justRecovered) {
+                    this.recoveryFrames++;
+                    if (this.recoveryFrames >= 30) {
+                        this.justRecovered = false;
+                        this.recoveryFrames = 0;
+                    }
+                }
+                
                 if (dist > this.stopDistance) {
-                    // Smooth easing wie vorher - schnelle Verfolgung
+                    // Normale Bewegung - aber sanfter Start nach Recovery!
                     let easing = 0.05;
+                    
+                    // Reduziere Easing in den ersten 30 Frames nach Recovery
+                    if (this.justRecovered) {
+                        let recoveryProgress = this.recoveryFrames / 30;
+                        easing = 0.01 + (0.04 * recoveryProgress);  // Rampe von 0.01 → 0.05
+                    }
+                    
                     let moveX = dx * easing;
                     let moveY = dy * easing;
                     
                     this.x += moveX;
                     this.y += moveY;
                     
-                    // Velocity tracken
                     this.vx = moveX;
                     this.vy = moveY;
                     isMoving = true;
                 } else {
-                    // Maus steht: Sanftes Abbremsen mit Momentum
-                    // Im Idle-Mode viel schneller abbremsen für stabiles Cape
                     let brakeFactor = this.isIdle ? 0.5 : 0.85;
                     this.vx *= brakeFactor;
                     this.vy *= brakeFactor;
                     
-                    // Weiter gleiten mit Restgeschwindigkeit (nur wenn signifikant)
                     if (Math.abs(this.vx) > 0.02 || Math.abs(this.vy) > 0.02) {
                         this.x += this.vx;
                         this.y += this.vy;
                     } else {
-                        // Velocity sehr klein: Komplett auf 0 setzen für stabiles Cape
                         this.vx = 0;
                         this.vy = 0;
                     }
                     
-                    // Im idle sanft zurück zur richtigen Position
                     if (this.isIdle && dist > this.stopDistance - 10) {
                         this.x += dx * 0.005;
                         this.y += dy * 0.005;
                     }
                 }
                 
-                // Geschwindigkeit berechnen (für Cape-Physik)
-                this.velocity = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                
                 // Idle-Mechanik
                 if (isMoving || dist > this.stopDistance + 10) {
-                    // Bewegung: Idle-Timer zurücksetzen
                     this.idleTime = 0;
                     this.isIdle = false;
                 } else {
-                    // Stillstand: Idle-Timer hochzählen
                     this.idleTime++;
                     if (this.idleTime > this.idleThreshold) {
                         this.isIdle = true;
@@ -281,36 +340,201 @@
                 }
                 
                 // Rotation
-                let targetAngle;
+                let targetAngle = this.isIdle ? PI : Math.atan2(dy, dx) - HALF_PI;
                 
-                if (this.isIdle) {
-                    // Idle: Aufrecht schweben (Kopf/Spitze nach oben)
-                    targetAngle = PI;
-                } else {
-                    // Flug: Kopf/Spitze zeigt zur Maus
-                    targetAngle = Math.atan2(dy, dx) - HALF_PI;
-                }
-                
-                // Winkel normalisieren
                 let angleDiff = targetAngle - this.angle;
                 while (angleDiff > PI) angleDiff -= TWO_PI;
                 while (angleDiff < -PI) angleDiff += TWO_PI;
                 
-                // Smooth rotation - stabil und heldenhaft
                 let rotationSpeed = this.isIdle ? 0.045 : 0.12;
                 this.angle += angleDiff * rotationSpeed;
                 
-                // Schwebe-Animation im idle - smooth transition
+                // Schwebe-Animation
                 let targetHoverOffset = this.isIdle ? Math.sin(frameCount * 0.06) * 8 : 0;
                 this.hoverOffset += (targetHoverOffset - this.hoverOffset) * 0.1;
             }
             
+            // ========== HYPERFOKUS TRIGGER ==========
+            triggerHyperfocus(targetX, targetY) {
+                this.state = 'hyperfocus';
+                
+                // Berechne Richtung zur Maus
+                let dx = targetX - this.x;
+                let dy = targetY - this.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 0) {
+                    // Normalisiere Richtung
+                    let dirX = dx / dist;
+                    let dirY = dy / dist;
+                    
+                    // Finde Schnittpunkt mit Bildschirmrand in dieser Richtung
+                    let t_values = [];
+                    
+                    if (dirX > 0) {
+                        t_values.push((width - this.x) / dirX);
+                    } else if (dirX < 0) {
+                        t_values.push(-this.x / dirX);
+                    }
+                    
+                    if (dirY > 0) {
+                        t_values.push((height - this.y) / dirY);
+                    } else if (dirY < 0) {
+                        t_values.push(-this.y / dirY);
+                    }
+                    
+                    // Finde nächsten Rand
+                    let t_min = Math.min(...t_values.filter(t => t > 0));
+                    
+                    // Ziel ist jetzt IMMER am Bildschirmrand!
+                    this.hyperfocusTarget.x = this.x + dirX * t_min;
+                    this.hyperfocusTarget.y = this.y + dirY * t_min;
+                    
+                    // Setze Geschwindigkeit (doppelt so schnell!)
+                    this.vx = dirX * 10;
+                    this.vy = dirY * 10;
+                }
+                
+                this.isIdle = false;
+                this.idleTime = 0;
+            }
+            
+            // ========== HYPERFOKUS STATE ==========
+            updateHyperfocus() {
+                // Ignoriere Maus komplett! Fliege stur zum gespeicherten Ziel
+                
+                // Beschleunige weiter in Richtung fixiertes Ziel
+                let dx = this.hyperfocusTarget.x - this.x;
+                let dy = this.hyperfocusTarget.y - this.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 5) {
+                    // Weiter beschleunigen (Tunnel-Vision!)
+                    let acceleration = 0.3;
+                    this.vx += (dx / dist) * acceleration;
+                    this.vy += (dy / dist) * acceleration;
+                }
+                
+                // Bewege Stern
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Rotation zur Flugrichtung
+                let targetAngle = Math.atan2(this.vy, this.vx) - HALF_PI;
+                let angleDiff = targetAngle - this.angle;
+                while (angleDiff > PI) angleDiff -= TWO_PI;
+                while (angleDiff < -PI) angleDiff += TWO_PI;
+                this.angle += angleDiff * 0.2;
+                
+                // Check Wand-Kollision
+                let margin = this.size;
+                let hitWall = false;
+                
+                if (this.x <= margin) {
+                    this.x = margin;
+                    this.vx = Math.abs(this.vx) * 0.6;  // Bounce nach rechts
+                    hitWall = true;
+                } else if (this.x >= width - margin) {
+                    this.x = width - margin;
+                    this.vx = -Math.abs(this.vx) * 0.6;  // Bounce nach links
+                    hitWall = true;
+                }
+                
+                if (this.y <= margin) {
+                    this.y = margin;
+                    this.vy = Math.abs(this.vy) * 0.6;  // Bounce nach unten
+                    hitWall = true;
+                } else if (this.y >= height - margin) {
+                    this.y = height - margin;
+                    this.vy = -Math.abs(this.vy) * 0.6;  // Bounce nach oben
+                    hitWall = true;
+                }
+                
+                if (hitWall) {
+                    // CRASH! Übergang zu crashed state
+                    this.state = 'crashed';
+                    this.crashRotation = this.angle;
+                    this.crashRotationSpeed = random(0.15, 0.3) * (random() > 0.5 ? 1 : -1);
+                }
+            }
+            
+            // ========== CRASHED STATE ==========
+            updateCrashed() {
+                // Physikalisches Abbremsen nach Crash
+                this.vx *= 0.92;
+                this.vy *= 0.92;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Taumelnde Rotation
+                this.crashRotation += this.crashRotationSpeed;
+                this.crashRotationSpeed *= 0.95;
+                this.angle = this.crashRotation;
+                
+                // Wenn fast stillsteht → Shaking
+                if (Math.abs(this.vx) < 0.5 && Math.abs(this.vy) < 0.5) {
+                    this.state = 'shaking';
+                    this.shakeTimer = 0;
+                    this.vx = 0;
+                    this.vy = 0;
+                }
+            }
+            
+            // ========== SHAKING STATE ==========
+            updateShaking() {
+                this.shakeTimer++;
+                
+                // Shake-Intensität: Stark am Anfang, nimmt ab - INTENSIVER!
+                this.shakeIntensity = (1 - this.shakeTimer / this.shakeDuration) * 5;  // 3 → 5 (stärker!)
+                
+                // SMOOTH TRANSITION: Drehe sanft zur aufrechten Position (PI)
+                // In den ersten 20 Frames: Rotation von crashed-Winkel zu PI (langsamer: 15 → 20)
+                if (this.shakeTimer <= 20) {
+                    let transitionProgress = this.shakeTimer / 20;
+                    // Smooth easing
+                    let easedProgress = transitionProgress * transitionProgress * (3 - 2 * transitionProgress); // Smoothstep
+                    
+                    // Interpoliere von crashRotation zu PI
+                    let targetAngle = PI;
+                    let angleDiff = targetAngle - this.crashRotation;
+                    
+                    // Normalisiere Winkel-Differenz
+                    while (angleDiff > PI) angleDiff -= TWO_PI;
+                    while (angleDiff < -PI) angleDiff += TWO_PI;
+                    
+                    this.angle = this.crashRotation + angleDiff * easedProgress;
+                } else {
+                    // Nach Transition: Normale Wackel-Animation - STÄRKER!
+                    // Mehrere Sinus-Wellen überlagert für organische Bewegung
+                    let shake1 = Math.sin(this.shakeTimer * 0.3) * this.shakeIntensity * 0.05;  // 0.03 → 0.05
+                    let shake2 = Math.sin(this.shakeTimer * 0.5) * this.shakeIntensity * 0.03;  // 0.02 → 0.03
+                    let shakeAngle = shake1 + shake2;
+                    this.angle = PI + shakeAngle;  // Aufrecht + stärkeres Wackeln
+                }
+                
+                if (this.shakeTimer >= this.shakeDuration) {
+                    // Recovery! Zurück zu normal
+                    this.state = 'normal';
+                    this.shakeTimer = 0;
+                    this.shakeIntensity = 0;
+                    this.angle = PI;  // Aufrecht
+                    
+                    // WICHTIG: Starte im Idle, aber mit Reset-Flag!
+                    this.isIdle = true;
+                    this.justRecovered = true;  // Neues Flag für sanften Start
+                    
+                    // Geschwindigkeit auf 0 setzen!
+                    this.vx = 0;
+                    this.vy = 0;
+                }
+            }
+            
             drawStar() {
-                // 5-zackiger Stern - obere Spitze zeigt nach oben (0°)
                 beginShape();
                 for (let i = 0; i < 10; i++) {
-                    let angle = TWO_PI / 10 * i + TWO_PI / 20;  // Korrektur nach rechts
-                    let r = (i % 2 === 0) ? this.size : this.size * 0.4;  // Lange/kurze Spitzen
+                    let angle = TWO_PI / 10 * i + TWO_PI / 20;
+                    let r = (i % 2 === 0) ? this.size : this.size * 0.4;
                     let vx = Math.cos(angle) * r;
                     let vy = Math.sin(angle) * r;
                     vertex(vx, vy);
@@ -319,70 +543,86 @@
             }
             
             drawCape() {
-                // Cape-Animation - einheitliches Verhalten basierend auf Geschwindigkeit
-                // Basis-Werte für Cape im Stillstand
+                // Cape-Physik basierend auf State
                 let baseWaveIntensity = 4;
                 let baseWaveSpeed = 0.06;
                 let baseGravity = 6;
                 
-                // Wenn idle: Cape komplett stabil (kein Jiggling)
-                if (this.isIdle) {
-                    this.capeVelocityFactor = 0;
-                } else {
-                    // Nur während Flug: Geschwindigkeit beeinflusst Cape
-                    let targetVelocityFactor = Math.min(this.velocity * 3, 1);
-                    if (!this.capeVelocityFactor) this.capeVelocityFactor = 0;
-                    this.capeVelocityFactor += (targetVelocityFactor - this.capeVelocityFactor) * 0.15;
+                // ========== HYPERFOKUS: EXTREMES FLATTERN! ==========
+                if (this.state === 'hyperfocus') {
+                    // Doppelte Intensität + schnellere Wellen!
+                    baseWaveIntensity = 12;
+                    baseWaveSpeed = 0.15;
+                    baseGravity = 2;  // Cape wird vom Wind nach hinten gerissen
+                }
+                // ========== CRASHED/SHAKING: Schlaff ==========
+                else if (this.state === 'crashed' || this.state === 'shaking') {
+                    baseWaveIntensity = 1;
+                    baseWaveSpeed = 0.03;
+                    baseGravity = 10;  // Hängt schwer
+                }
+                // ========== NORMAL ==========
+                else {
+                    if (this.isIdle) {
+                        this.capeVelocityFactor = 0;
+                    } else {
+                        let targetVelocityFactor = Math.min(this.velocity * 3, 1);
+                        if (!this.capeVelocityFactor) this.capeVelocityFactor = 0;
+                        this.capeVelocityFactor += (targetVelocityFactor - this.capeVelocityFactor) * 0.15;
+                    }
+                    
+                    baseWaveIntensity += this.capeVelocityFactor * 4;
+                    baseWaveSpeed += this.capeVelocityFactor * 0.04;
+                    baseGravity -= this.capeVelocityFactor * 3;
                 }
                 
-                // Cape flattert etwas mehr bei Bewegung, aber nicht extrem
-                let waveIntensity = baseWaveIntensity + this.capeVelocityFactor * 4;
-                let waveSpeed = baseWaveSpeed + this.capeVelocityFactor * 0.04;
+                let wave1 = Math.sin(frameCount * baseWaveSpeed) * baseWaveIntensity;
+                let wave2 = Math.sin(frameCount * baseWaveSpeed + 1) * baseWaveIntensity * 0.7;
+                let wave3 = Math.sin(frameCount * baseWaveSpeed + 2) * baseWaveIntensity * 0.5;
                 
-                // Gravity wird bei Bewegung weniger (Cape wird vom Wind getragen)
-                let gravity = baseGravity - this.capeVelocityFactor * 3;
-                
-                // Mehrere Wellen für realistisches Flattern
-                let wave1 = Math.sin(frameCount * waveSpeed) * waveIntensity;
-                let wave2 = Math.sin(frameCount * waveSpeed + 1) * waveIntensity * 0.7;
-                let wave3 = Math.sin(frameCount * waveSpeed + 2) * waveIntensity * 0.5;
-                
-                fill(200, 25, 45);  // Dunkleres Rot
+                fill(200, 25, 45);
                 noStroke();
                 
                 beginShape();
-                // Cape-Punkte mit Wellen + Gravity (nach unten gezogen)
                 vertex(-20, 0);
-                vertex(-30 + wave1 * 0.3, 20 + gravity * 0.2);
-                vertex(-40 + wave1 * 0.6, 40 + gravity * 0.4);
-                vertex(-45 + wave2 * 0.8, 60 + gravity * 0.6);
-                vertex(-40 + wave3, 80 + gravity * 0.8);
-                vertex(-20 + wave3 * 0.5, 70 + gravity * 0.9);
-                vertex(0 + wave3 * 0.3, 75 + gravity);
-                vertex(20 + wave3 * 0.5, 70 + gravity * 0.9);
-                vertex(40 + wave3, 80 + gravity * 0.8);
-                vertex(45 + wave2 * 0.8, 60 + gravity * 0.6);
-                vertex(40 + wave1 * 0.6, 40 + gravity * 0.4);
-                vertex(30 + wave1 * 0.3, 20 + gravity * 0.2);
+                vertex(-30 + wave1 * 0.3, 20 + baseGravity * 0.2);
+                vertex(-40 + wave1 * 0.6, 40 + baseGravity * 0.4);
+                vertex(-45 + wave2 * 0.8, 60 + baseGravity * 0.6);
+                vertex(-40 + wave3, 80 + baseGravity * 0.8);
+                vertex(-20 + wave3 * 0.5, 70 + baseGravity * 0.9);
+                vertex(0 + wave3 * 0.3, 75 + baseGravity);
+                vertex(20 + wave3 * 0.5, 70 + baseGravity * 0.9);
+                vertex(40 + wave3, 80 + baseGravity * 0.8);
+                vertex(45 + wave2 * 0.8, 60 + baseGravity * 0.6);
+                vertex(40 + wave1 * 0.6, 40 + baseGravity * 0.4);
+                vertex(30 + wave1 * 0.3, 20 + baseGravity * 0.2);
                 vertex(20, 0);
                 endShape(CLOSE);
             }
             
             display() {
-                // Stern und Cape - MINIMALISTISCH!
                 push();
-                translate(this.x, this.y + this.hoverOffset);
                 
-                // Cape ZUERST (hinten) - 180° gedreht! (entgegengesetzt zum Kopf)
+                // Shaking: Position wackelt auch - SMOOTHER!
+                let shakeX = 0, shakeY = 0;
+                if (this.state === 'shaking') {
+                    // Sanftere Sinus-basierte Bewegung statt random
+                    shakeX = Math.sin(this.shakeTimer * 0.4) * this.shakeIntensity;
+                    shakeY = Math.cos(this.shakeTimer * 0.35) * this.shakeIntensity;
+                }
+                
+                translate(this.x + shakeX, this.y + this.hoverOffset + shakeY);
+                
+                // Cape ZUERST (hinten)
                 push();
-                rotate(this.angle + PI);  // + PI = 180° entgegengesetzt!
+                rotate(this.angle + PI);
                 this.drawCape();
                 pop();
                 
                 // Stern DARÜBER (vorne)
                 push();
                 rotate(this.angle);
-                fill(30, 80, 140);  // Tiefes Blau
+                fill(30, 80, 140);
                 noStroke();
                 this.drawStar();
                 pop();
@@ -397,9 +637,8 @@
         }
         
         function draw() {
-            background(240, 240, 245);  // Helles Grau-Blau - clean & minimalistisch
+            background(240, 240, 245);
             
-            // Superman updaten und zeichnen
             star.update(mouseX, mouseY);
             star.display();
         }
@@ -418,7 +657,6 @@
             infoPanel.classList.toggle('active');
         });
         
-        // Close panel when clicking outside
         document.addEventListener('click', (e) => {
             if (!infoPanel.contains(e.target) && e.target !== infoButton) {
                 infoPanel.classList.remove('active');
