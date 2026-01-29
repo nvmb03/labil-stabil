@@ -243,10 +243,10 @@
         // Position
         let x, y;
         
-        // Stern-Form Parameter - 4-Zacken Blitz-Stern!
-        const points = 4;  // 4 Zacken wie im Bild!
-        const base_outer = 50.0;
-        const base_inner = 15.0;  // Spitz aber nicht zu dünn
+        // Stern-Form Parameter - 5-Zacken wie Spider-Man & Superman!
+        const points = 5;  // 4 → 5 Zacken!
+        const base_outer = 30.0;  // 50 → 30 (gleiche Größe wie Spider-Man!)
+        const base_inner = 12.0;  // 15 → 12 (Verhältnis wie Spider-Man: 0.4)
         let outer_radius = base_outer;
         let inner_radius = base_inner;
         // KEINE VARIATION - perfekt symmetrisch!
@@ -645,9 +645,9 @@
         function startCharging() {
             state = "charging";
             state_timer = 0;
-            // MINIMALES Morphing - bleibt fast gleich!
-            target_outer = random(45, 52);  // Sehr wenig Variation: 45-52
-            target_inner = random(13, 17);  // Sehr wenig Variation: 13-17
+            // MINIMALES Morphing - nur leicht größer!
+            target_outer = random(32, 35);  // War 45-52 → jetzt 32-35 (nur +2 bis +5!)
+            target_inner = random(11, 13);  // War 13-17 → jetzt 11-13 (nur -1 bis +1!)
         }
 
         function startDash() {
