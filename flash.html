@@ -278,6 +278,7 @@
         // Fail-States
         let fail_type = null;  // "stumble" oder "slip"
         let fail_timer = 0;
+        let shake_start_rotation = 0.0;  // Speichert Rotation beim Start des Shakings
         let fail_direction = 0.0;
         let slip_offset = 0.0;  // Für Cartoon-Slip Rotation
         let squash_amount = 1.0;  // Für Plumpsen (Größen-Multiplikator)
@@ -506,8 +507,8 @@
                 // Squash bleibt IMMER bei 1.0 (KEINE Form-Änderung!)
                 squash_amount = 1.0;
                 
-                // Schneller weiter - KÜRZER!
-                if (fail_timer > 12) {  // War 20 → jetzt 12! (0.2 Sek)
+                // Schneller weiter - VIEL KÜRZER!
+                if (fail_timer > 6) {  // 12 → 6 (0.1 Sek)
                     state = "spinning_down";
                     fail_timer = 0;
                     squash_amount = 1.0;
@@ -565,8 +566,8 @@
                     slip_offset *= 0.95;
                 }
                 
-                // Wenn ausgedreht: Aufstehen - SCHNELLER!
-                if (Math.abs(rotation_speed) < 0.005 || fail_timer > 55) {  // War 70 → jetzt 55!
+                // Wenn ausgedreht: Aufstehen - VIEL SCHNELLER!
+                if (Math.abs(rotation_speed) < 0.005 || fail_timer > 25) {  // 55 → 25!
                     rotation_speed = 0.0;
                     slip_offset = 0.0;
                     vx = 0.0;
@@ -582,18 +583,33 @@
                 // Squash bleibt bei 1.0
                 squash_amount = 1.0;
                 
-                // SCHNELLER zu Shaking!
-                if (fail_timer > 12) {  // War 20 → jetzt 12!
+                // VIEL SCHNELLER zu Shaking!
+                if (fail_timer > 6) {  // 12 → 6!
                     state = "shaking";
                     fail_timer = 0;
+                    shake_start_rotation = rotation;  // Speichere aktuelle Rotation
                 }
             }
             else if (state === "shaking") {
-                // KOPF SCHÜTTELN - SCHNELLER!
+                // KOPF SCHÜTTELN - Rotation um eigene Achse, direkt aus aktueller Position!
                 fail_timer++;
                 
+                // Shake-Intensität: Schwächer aber schneller!
+                let shakeIntensity = (1 - fail_timer / 30) * 5;  // 60 → 30 (kürzer!)
+                
+                // DIREKT SHAKEN um die Start-Rotation herum - SCHNELLER & HÄUFIGER!
+                // Langsamere Frequenzen für häufigeres aber gemächlicheres Wackeln
+                let shake1 = Math.sin(fail_timer * 0.25) * shakeIntensity * 0.06;  // 0.40 → 0.25 (langsamer!)
+                let shake2 = Math.sin(fail_timer * 0.30) * shakeIntensity * 0.05;  // 0.50 → 0.30
+                let shake3 = Math.sin(fail_timer * 0.35) * shakeIntensity * 0.04;  // 0.60 → 0.35
+                let shake4 = Math.sin(fail_timer * 0.40) * shakeIntensity * 0.03;  // 0.70 → 0.40
+                let shake5 = Math.sin(fail_timer * 0.45) * shakeIntensity * 0.02;  // 0.80 → 0.45
+                let shakeAngle = shake1 + shake2 + shake3 + shake4 + shake5;
+                rotation = shake_start_rotation + shakeAngle;  // Wackelt schnell um die Start-Position!
+                
                 // KÜRZER!
-                if (fail_timer > 20) {  // War 30 → jetzt 20!
+                if (fail_timer > 30) {  // 60 → 30 (0.5 Sekunden)
+                    rotation = shake_start_rotation;  // Zurück zur Start-Position
                     state = "angry";
                     fail_timer = 0;
                 }
@@ -603,7 +619,7 @@
                 fail_timer++;
                 
                 // KÜRZER!
-                if (fail_timer > 20) {  // War 30 → jetzt 20!
+                if (fail_timer > 10) {  // 20 → 10!
                     state = "pausing";
                     fail_timer = 0;
                 }
@@ -613,7 +629,7 @@
                 fail_timer++;
                 
                 // KÜRZER!
-                if (fail_timer > 30) {  // War 40 → jetzt 30! (0.5 Sek)
+                if (fail_timer > 15) {  // 30 → 15! (0.25 Sek)
                     state = "idle";
                     state_timer = 0;
                     fail_type = null;
@@ -802,21 +818,13 @@
             let display_y = y;
             let extra_rotation = 0.0;
             
-            // Shake-Effekt (horizontal wackeln) - MEHR FRUSTRATION!
-            if (state === "shaking") {
-                let shake_freq = 5;  // War 8 → jetzt 5 (schneller wackeln!)
-                let shake_amount = 18;  // War 10 → jetzt 18 (stärker wackeln!)
-                if (fail_timer < 30) {
-                    display_x += Math.sin(fail_timer * PI / shake_freq) * shake_amount;
-                }
-            }
-            
             // Slip-Offset (Cartoon-Kippung)
             if (state === "slipping" || state === "on_ground") {
                 extra_rotation = slip_offset;
             }
             
             // Haupt-Stern zeichnen
+            // Shake-Effekt wird jetzt direkt über rotation gesteuert (in updateFlash)
             drawStarShape(display_x, display_y, rotation + extra_rotation);
         }
 
