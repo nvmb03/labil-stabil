@@ -255,7 +255,7 @@
         // State Management
         let state = "idle";
         let state_timer = 0;
-        const charge_duration = 60;  // SCHNELLER: 75 → 60 Frames (1.0 Sek statt 1.25!)
+        const charge_duration = 40;  // 60 → 40 (schneller aufladen!)
         
         // Rotation
         let rotation = 0.0;
@@ -264,8 +264,8 @@
         // Bewegung
         let vx = 0.0;
         let vy = 0.0;
-        const dash_speed = 35.0;  // LANGSAMER: 45 → 35 (nicht so hyperaktiv!)
-        const friction = 0.94;
+        const dash_speed = 60.0;  // 45 → 60 (schneller!)
+        const friction = 0.91;  // 0.82 → 0.91 (doppelte Dash-Länge!)
         
         // Morphing beim Aufladen
         let target_outer = base_outer;
@@ -698,17 +698,17 @@
             
             if (dist > 0) {
                 if (fail_type === "stumble") {
-                    // Leicht falsche Richtung (15-30 Grad Abweichung)
-                    let angle_offset = random(-0.5, 0.5);
+                    // SEHR falsche Richtung! (60-90 Grad Abweichung - definitiv falsch!)
+                    let angle_offset = random(-1.2, 1.2);  // -0.5 → 1.2 (viel größer!)
                     let angle = Math.atan2(dy, dx) + angle_offset;
                     vx = Math.cos(angle) * dash_speed;
                     vy = Math.sin(angle) * dash_speed;
                     fail_direction = angle_offset;
                 }
                 else if (fail_type === "slip") {
-                    // Zu schnell! 150% Speed
-                    vx = (dx / dist) * dash_speed * 1.5;
-                    vy = (dy / dist) * dash_speed * 1.5;
+                    // Zu schnell! 160% Speed (proportional zu höherer dash_speed)
+                    vx = (dx / dist) * dash_speed * 1.6;
+                    vy = (dy / dist) * dash_speed * 1.6;
                 }
                 else {
                     // Normal
