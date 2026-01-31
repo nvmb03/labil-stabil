@@ -199,6 +199,167 @@
     <script>
         // p5.js Sketch
         let star;
+        let clouds = [];
+        let cloudParticles = [];
+        let pendingCloudSpawns = [];  // Geplante Wolken-Spawns
+        
+        class CloudSpawnEvent {
+            constructor() {
+                this.delay = random(60, 180);  // 1-3 Sekunden bei 60 FPS
+                this.timeRemaining = this.delay;
+            }
+            
+            update() {
+                this.timeRemaining--;
+                return this.timeRemaining <= 0;
+            }
+        }
+        
+        class CloudParticle {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.size = random(8, 15);
+                this.maxSize = this.size;
+                this.life = 1.0;
+                this.decay = random(0.015, 0.025);
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1;  // Schwerkraft
+                this.life -= this.decay;
+                this.size = this.maxSize * this.life;
+            }
+            
+            display() {
+                push();
+                fill(255, 255, 255, 200 * this.life);
+                noStroke();
+                circle(this.x, this.y, this.size);
+                pop();
+            }
+            
+            isDead() {
+                return this.life <= 0;
+            }
+        }
+        
+        class Cloud {
+            constructor(x, y, size) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.speed = random(0.2, 0.8);
+                this.type = floor(random(5));  // 5 unterschiedliche asymmetrische Wolkentypen
+                this.isDissolving = false;
+                this.dissolveProgress = 0;
+                // Zufällige kleine Offsets für extra Variation
+                this.randomOffsets = {
+                    top: random(-5, 8),
+                    left: random(-6, 6),
+                    right: random(-6, 6),
+                    bottom: random(-5, 8)
+                };
+            }
+            
+            update() {
+                if (!this.isDissolving) {
+                    this.x += this.speed;
+                    // Wolken wrappen am Bildschirmrand
+                    if (this.x > width + 100) {
+                        this.x = -100;
+                    }
+                }
+            }
+            
+            checkCollision(starX, starY, starSize) {
+                let distance = dist(this.x, this.y, starX, starY);
+                return distance < this.size + starSize;
+            }
+            
+            dissolve() {
+                if (!this.isDissolving) {
+                    this.isDissolving = true;
+                    // Erstelle Partikel
+                    let particleCount = random(8, 15);
+                    for (let i = 0; i < particleCount; i++) {
+                        let angle = random(TWO_PI);
+                        let speed = random(2, 5);
+                        let vx = cos(angle) * speed;
+                        let vy = sin(angle) * speed - 2;  // Nach oben impulse
+                        cloudParticles.push(new CloudParticle(this.x, this.y, vx, vy));
+                    }
+                    
+                    // Plane das Spawning einer neuen Wolke
+                    pendingCloudSpawns.push(new CloudSpawnEvent());
+                }
+            }
+            
+            display() {
+                if (this.isDissolving) {
+                    return;  // Nicht zeichnen wenn aufgelöst
+                }
+                
+                push();
+                fill(255, 255, 255, 220);
+                noStroke();
+                
+                let cx = this.x;
+                let cy = this.y;
+                let s = this.size;
+                
+                // Verschiedene Wolkentypen - asymmetrisch mit größeren Kugeln
+                if (this.type === 0) {
+                    // Große fluffige Wolke
+                    circle(cx - s * 0.7, cy + this.randomOffsets.left * 0.05, s * 0.7);
+                    circle(cx - s * 0.2, cy - s * 0.5 + this.randomOffsets.top * 0.03, s * 0.9);
+                    circle(cx + s * 0.5, cy - s * 0.35 + this.randomOffsets.top * 0.04, s * 0.85);
+                    circle(cx + s * 0.95, cy + this.randomOffsets.right * 0.05, s * 0.65);
+                    circle(cx + s * 0.05, cy + s * 0.4 + this.randomOffsets.bottom * 0.03, s * 0.75);
+                    
+                } else if (this.type === 1) {
+                    // Breite Wolke mit Wölbung - rechts unten ausgebeult
+                    circle(cx - s * 0.8, cy + s * 0.2, s * 0.65);
+                    circle(cx - s * 0.25, cy - s * 0.4, s * 0.8);
+                    circle(cx + s * 0.15, cy - s * 0.6, s * 0.9);
+                    circle(cx + s * 0.6, cy - s * 0.2, s * 0.75);
+                    circle(cx + s * 1.05, cy + s * 0.35, s * 0.75);
+                    circle(cx + s * 0.15, cy + s * 0.5, s * 0.65);
+                    
+                } else if (this.type === 2) {
+                    // Kleine kugelige Wolke - asymmetrisch
+                    circle(cx - s * 0.35, cy + s * 0.1, s * 0.6);
+                    circle(cx, cy - s * 0.45, s * 0.75);
+                    circle(cx + s * 0.55, cy - s * 0.1, s * 0.65);
+                    circle(cx - s * 0.2, cy + s * 0.35, s * 0.55);
+                    circle(cx + s * 0.4, cy + s * 0.3, s * 0.6);
+                    
+                } else if (this.type === 3) {
+                    // Wolke mit oben-links Beule
+                    circle(cx - s * 0.75, cy - s * 0.5, s * 0.85);
+                    circle(cx - s * 0.1, cy - s * 0.55, s * 0.9);
+                    circle(cx + s * 0.4, cy - s * 0.25, s * 0.75);
+                    circle(cx + s * 0.85, cy + s * 0.05, s * 0.65);
+                    circle(cx, cy + s * 0.4, s * 0.7);
+                    circle(cx - s * 0.5, cy + s * 0.25, s * 0.65);
+                    
+                } else {
+                    // Breite asymmetrische Wolke - links ausgebeult
+                    circle(cx - s * 1.05, cy - s * 0.05, s * 0.75);
+                    circle(cx - s * 0.45, cy - s * 0.45, s * 0.85);
+                    circle(cx + s * 0.05, cy - s * 0.55, s * 0.9);
+                    circle(cx + s * 0.5, cy - s * 0.15, s * 0.7);
+                    circle(cx + s * 0.8, cy + s * 0.2, s * 0.65);
+                    circle(cx - s * 0.15, cy + s * 0.45, s * 0.65);
+                }
+                
+                pop();
+            }
+        }
         
         class SupermanStar {
             constructor(x, y) {
@@ -634,6 +795,14 @@
         function setup() {
             createCanvas(windowWidth, windowHeight);
             star = new SupermanStar(width / 2, height / 2);
+            
+            // Wolken erstellen - zufällig auf dem Screen beim Start
+            for (let i = 0; i < 7; i++) {
+                let x = random(width);
+                let y = random(height * 0.15, height * 0.65);
+                let size = random(30, 60);
+                clouds.push(new Cloud(x, y, size));
+            }
         }
         
         function draw() {
@@ -647,6 +816,47 @@
                 line(0, y, width, y);
             }
             noStroke();
+            
+            // Geplante Wolken-Spawns verarbeiten
+            for (let i = pendingCloudSpawns.length - 1; i >= 0; i--) {
+                if (pendingCloudSpawns[i].update()) {
+                    // Spawn neue Wolke von links
+                    let x = -100;  // Weit links außerhalb des Bildschirms
+                    let y = random(height * 0.15, height * 0.65);
+                    let size = random(30, 60);
+                    clouds.push(new Cloud(x, y, size));
+                    
+                    pendingCloudSpawns.splice(i, 1);
+                }
+            }
+            
+            // Wolken updaten und auf Kollision prüfen
+            for (let i = clouds.length - 1; i >= 0; i--) {
+                clouds[i].update();
+                
+                // Kollisionserkennung mit Superman
+                if (clouds[i].checkCollision(star.x, star.y, star.size)) {
+                    clouds[i].dissolve();
+                }
+                
+                // Entferne aufgelöste Wolken
+                if (clouds[i].isDissolving) {
+                    clouds.splice(i, 1);
+                } else {
+                    clouds[i].display();
+                }
+            }
+            
+            // Wolkenpartikel zeichnen und updaten
+            for (let i = cloudParticles.length - 1; i >= 0; i--) {
+                cloudParticles[i].update();
+                cloudParticles[i].display();
+                
+                // Entferne tote Partikel
+                if (cloudParticles[i].isDead()) {
+                    cloudParticles.splice(i, 1);
+                }
+            }
             
             star.update(mouseX, mouseY);
             star.display();
