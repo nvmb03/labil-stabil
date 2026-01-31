@@ -23,7 +23,7 @@
         }
         body {
             font-family: 'Space Mono', monospace;
-            background: #ffebeb;
+            background: #1C1E22;
             overflow: hidden;
         }
         canvas {
@@ -35,8 +35,8 @@
             position: fixed;
             width: 50px;
             height: 50px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(12, 13, 16, 0.85);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             color: #fff;
             display: flex;
             align-items: center;
@@ -72,7 +72,7 @@
             right: 20px;
             width: 350px;
             max-height: calc(100vh - 120px);
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(12, 13, 16, 0.95);
             border: 2px solid #DC143C;  /* Crimson Red */
             border-left: 4px solid #DC143C;
             padding: 25px;
@@ -101,7 +101,7 @@
             font-size: 14px;
             margin-top: 20px;
             margin-bottom: 10px;
-            color: #FF8C00;  /* Dark Orange */
+            color: #F5C542;  /* Gold */
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -260,6 +260,11 @@
         
         // Trail für Motion Blur
         let trail_positions = [];
+
+        // Bremsspuren (max 10, verschwinden FIFO)
+        let brake_marks = [];
+        const max_brake_marks = 30;
+        let active_brake_mark = null;
         
         // Fail-States
         let fail_type = null;  // "stumble" oder "slip"
@@ -282,10 +287,58 @@
         }
 
         function draw() {
-            background(245, 245, 245);  // Helles Grau - Stadt-Feeling
+            drawStreetBackground();
+            drawBrakeMarks();
             
             updateFlash();
             displayFlash();
+        }
+
+        function drawBrakeMarks() {
+            if (brake_marks.length === 0) return;
+
+            for (let mark of brake_marks) {
+                if (mark.points.length < 2) continue;
+                push();
+                noFill();
+                stroke(18, 20, 24, mark.alpha);
+                strokeWeight(12);
+                strokeCap(ROUND);
+                beginShape();
+                for (let p of mark.points) {
+                    vertex(p.x, p.y);
+                }
+                endShape();
+                pop();
+            }
+        }
+
+        function drawStreetBackground() {
+            // Asphalt von oben
+            background(28, 30, 34);
+            noStroke();
+
+            // Subtile Asphalt-Textur
+            for (let i = 0; i < 120; i++) {
+                fill(255, 255, 255, 6);
+                ellipse(random(width), random(height), random(1, 3), random(1, 3));
+            }
+
+            // Fahrbahn-Markierungen (mittlere gestrichelte Linie)
+            push();
+            stroke(245, 197, 66);
+            strokeWeight(10);
+            drawingContext.setLineDash([80, 90]);
+            line(width / 2, -20, width / 2, height + 20);
+            pop();
+
+            // Randlinien
+            push();
+            stroke(170, 178, 191, 120);
+            strokeWeight(10);
+            line(width * 0.12, -20, width * 0.12, height + 20);
+            line(width * 0.88, -20, width * 0.88, height + 20);
+            pop();
         }
 
         function updateFlash() {
@@ -358,13 +411,16 @@
                 // Bewegung
                 x += vx;
                 y += vy;
+
+                // Bremsspur während Dash zeichnen
+                addBrakePoint();
                 
-                // Trail aufbauen (nur alle 2 Frames)
-                if (frameCount % 2 === 0) {
+                // Trail aufbauen (jeden Frame)
+                if (frameCount % 1 === 0) {
                     trail_positions.push({
                         x: x,
                         y: y,
-                        life: 15,
+                        life: 18,
                         rotation: rotation
                     });
                 }
@@ -404,6 +460,7 @@
                 
                 // Zum Stillstand gekommen? (Natürliches Abbremsen!)
                 if (speed < 0.5) {
+                    active_brake_mark = null;
                     // Wenn er gestolpert ist: Direkt zu on_ground (enttäuscht)
                     if (fail_type === "stumbled") {
                         state = "on_ground";
@@ -430,6 +487,9 @@
                 // Bewegung mit WACKELIGER LINIE (schwindelig!)
                 x += vx;
                 y += vy;
+
+                // Bremsspur während Slip zeichnen
+                addBrakePoint();
                 
                 // SCHWINDEL-EFFEKT: Wackelige Bewegung!
                 let dizzy_wobble_x = Math.sin(fail_timer * 0.3) * 3;  // Sinus-Welle horizontal
@@ -437,12 +497,12 @@
                 x += dizzy_wobble_x;
                 y += dizzy_wobble_y;
                 
-                // Trail
-                if (frameCount % 2 === 0) {
+                // Trail (jeden Frame)
+                if (frameCount % 1 === 0) {
                     trail_positions.push({
                         x: x,
                         y: y,
-                        life: 15,
+                        life: 18,
                         rotation: rotation
                     });
                 }
@@ -479,6 +539,7 @@
                 
                 // Erst nach NATÜRLICHEM Abbremsen UND genug Zeit: Zu spinning_down
                 if (speed < 0.5 && fail_timer > 30) {  // KEIN abrupter Stopp! Wartet länger!
+                    active_brake_mark = null;
                     state = "spinning_down";
                     fail_timer = 0;
                     // vx, vy BLEIBEN! (nicht auf 0 setzen - Momentum bleibt!)
@@ -654,6 +715,7 @@
 
         function startDash() {
             trail_positions = [];
+            startBrakeMark();
             
             // FAIL-CHECK: 25% Stumble, 25% Slip (50% TOTAL)
             let fail_roll = random();
@@ -706,6 +768,26 @@
             // Zurück zur normalen Größe beim Dash
             target_outer = base_outer;
             target_inner = base_inner;
+        }
+
+        function startBrakeMark() {
+            active_brake_mark = {
+                points: [{ x, y }],
+                alpha: 140
+            };
+            brake_marks.push(active_brake_mark);
+            if (brake_marks.length > max_brake_marks) {
+                brake_marks.shift();
+            }
+        }
+
+        function addBrakePoint() {
+            if (!active_brake_mark) return;
+            active_brake_mark.points.push({ x, y });
+            // Punkte begrenzen für Performance
+            if (active_brake_mark.points.length > 60) {
+                active_brake_mark.points.shift();
+            }
         }
 
         function drawStarShape(px, py, rot, alpha = 255) {
@@ -768,17 +850,21 @@
         }
 
         function displayFlash() {
-            // Trail zeichnen (helle gelbe Blitz-Silhouetten)
+            // Trail zeichnen (helle gelbe Blitz-Silhouetten mit Glow)
             for (let p of trail_positions) {
-                let alpha = (p.life / 15) * 180;  // Etwas transparenter
+                let alpha = (p.life / 18) * 220;
                 
                 push();
                 translate(p.x, p.y);
                 rotate(p.rotation);
                 scale(1.0, squash_amount);
+
+                // Glow (Canvas shadow)
+                drawingContext.shadowColor = `rgba(245, 197, 66, ${alpha / 255})`;
+                drawingContext.shadowBlur = 20;
                 
-                // HELLES GELB für Blitz-Trail (#FFE55C)
-                fill(255, 229, 92, alpha);
+                // GOLD für Blitz-Trail
+                fill(245, 197, 66, alpha);
                 noStroke();
                 
                 // Kleinere Trail-Sterne (70%)
