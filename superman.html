@@ -637,7 +637,16 @@
         }
         
         function draw() {
-            background(240, 240, 245);
+            // Himmel-Gradient: Oben dunkelblau, unten hellweiß
+            for (let y = 0; y < height; y++) {
+                let inter = map(y, 0, height, 0, 1);
+                let r = lerp(100, 220, inter);
+                let g = lerp(170, 240, inter);
+                let b = lerp(230, 255, inter);
+                stroke(r, g, b);
+                line(0, y, width, y);
+            }
+            noStroke();
             
             star.update(mouseX, mouseY);
             star.display();
