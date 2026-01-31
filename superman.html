@@ -23,7 +23,7 @@
         }
         body {
             font-family: 'Space Mono', monospace;
-            background: #F0F0F5;  /* Helles Grau-Blau */
+            background: #F5F7FB;  /* Sehr helles Blau */
             overflow: hidden;
         }
         canvas {
@@ -50,8 +50,8 @@
         }
         
         .icon-button:hover {
-            background: rgba(30, 80, 140, 0.9);  /* Tiefes Blau */
-            border-color: #1E508C;
+            background: rgba(25, 56, 130, 0.9);  /* Dunkles Blau */
+            border-color: #193882;
             transform: scale(1.1);
         }
         
@@ -73,8 +73,8 @@
             width: 350px;
             max-height: calc(100vh - 120px);
             background: rgba(0, 0, 0, 0.95);
-            border: 2px solid #1E508C;  /* Tiefes Blau */
-            border-left: 4px solid #1E508C;
+            border: 2px solid #193882;  /* Dunkles Blau */
+            border-left: 4px solid #193882;
             padding: 25px;
             color: #fff;
             backdrop-filter: blur(10px);
@@ -93,7 +93,7 @@
         #infoPanel h1 {
             font-size: 24px;
             margin-bottom: 15px;
-            color: #1E508C;  /* Tiefes Blau */
+            color: #193882;  /* Dunkles Blau */
             letter-spacing: 2px;
         }
         
@@ -101,7 +101,7 @@
             font-size: 14px;
             margin-top: 20px;
             margin-bottom: 10px;
-            color: #C8192D;  /* Dunkleres Rot */
+            color: #DC2626;  /* Kräftiges Rot */
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -114,7 +114,7 @@
         }
         
         #infoPanel strong {
-            color: #1E508C;  /* Tiefes Blau */
+            color: #193882;  /* Dunkles Blau */
         }
         
         #infoPanel ul {
@@ -134,7 +134,7 @@
             content: "→";
             position: absolute;
             left: 0;
-            color: #1E508C;  /* Tiefes Blau */
+            color: #193882;  /* Dunkles Blau */
         }
         
         /* Scrollbar styling */
@@ -147,7 +147,7 @@
         }
         
         #infoPanel::-webkit-scrollbar-thumb {
-            background: #1E508C;  /* Tiefes Blau */
+            background: #193882;  /* Dunkles Blau */
             border-radius: 3px;
         }
     </style>
@@ -718,7 +718,7 @@
                 let wave2 = Math.sin(frameCount * baseWaveSpeed + 1) * baseWaveIntensity * 0.7;
                 let wave3 = Math.sin(frameCount * baseWaveSpeed + 2) * baseWaveIntensity * 0.5;
                 
-                fill(200, 25, 45);
+                fill(220, 38, 38);
                 noStroke();
                 
                 beginShape();
@@ -760,7 +760,7 @@
                 // Stern DARÜBER (vorne)
                 push();
                 rotate(this.angle);
-                fill(30, 80, 140);
+                fill(25, 56, 130);
                 noStroke();
                 this.drawStar();
                 pop();
