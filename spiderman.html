@@ -192,41 +192,15 @@
     <!-- Info Panel -->
     <div id="infoPanel">
         <h1>SPIDER-MAN</h1>
-        
-        <p><strong>Neurodivergenz:</strong> ADHS / Impulsivität</p>
-        
-        <h2>Steuerung</h2>
-        <ul>
-            <li><strong>Maus im äußeren Bereich</strong> = Automatisches Schwingen</li>
-            <li><strong>LEERTASTE</strong> = Impulsiver Sofort-Schuss</li>
-            <li>Unregelmäßiger Rhythmus: 0.33-1.0 Sek zwischen Schüssen</li>
-        </ul>
-        
-        <h2>Mechaniken</h2>
-        <ul>
-            <li>Automatisches Schwingen mit instabilem Timing</li>
-            <li>Max 2 Netze gleichzeitig (ältestes beginnt zu reißen)</li>
-            <li>Netze halten nur ~0.67 Sekunden</li>
-            <li>40% der Netze haben Spray-Effekt am Rand</li>
-        </ul>
-        
-        <h2>Impulsive Fails</h2>
-        <ul>
-            <li><strong>15%:</strong> Netz zu kurz! (erreicht nur 40-70% der Strecke)</li>
-            <li><strong>10%:</strong> Netz reißt vorzeitig (nach 0.5-0.8 Sek)</li>
-            <li><strong>5% pro Sekunde:</strong> Panik-Explosion mit chaotischen Netzen in alle Richtungen</li>
-            <li><strong>75%:</strong> Netz hält (aber nur kurz!)</li>
-        </ul>
-        
-        <h2>Fail-States</h2>
-        <ul>
-            <li><strong>Panic Explosion:</strong> Unkontrolliertes Netz-Feuer → Fall</li>
-            <li><strong>Falling:</strong> Freier Fall mit Rotation</li>
-            <li><strong>Rolling:</strong> Frustriert am Boden ausrollen</li>
-        </ul>
-        
-        <h2>Tragik</h2>
-        <p>Spider-Man kann nicht warten, plant nicht voraus. Jeder Impuls wird sofort ausgeführt – zu schnell, zu kurz, zu chaotisch. Seine Reflexe sind perfekt, aber im kritischen Moment schießt er los bevor er nachdenkt. Impulsivität wird zum tödlichen Fall.</p>
+
+        <h2>Stabil</h2>
+        <p>Spider-Man schwingt mit präziser Eleganz. Seine Netze zeichnen klare Bögen, jeder Impuls ist kontrolliert. Seine Stärke ist die perfekte Verbindung von Tempo und Richtung.</p>
+
+        <h2>Labil: Neurodivergenz (ADHS/Impulsivität)</h2>
+        <p>Plötzlich zündet der Impuls: Er wird schneller, wilder, scheinbar grenzenlos. Die Superkraft überdreht – Netze schießen zu früh, Richtungen kippen, der Schwung zerfällt. Die Kontrolle ist weg, der Raum wird gefährlich.</p>
+
+        <h2>Die Tragik – und Stärke</h2>
+        <p>Seine Neurodivergenz ist sein doppeltes Schwert. Sie treibt seine Kraft ins Übermenschliche – und reißt ihm zugleich die Steuerung aus der Hand. Superkraft und Verletzlichkeit sind eins.</p>
     </div>
 
     <script>
@@ -267,7 +241,6 @@
         let current_web_target_x = 0;
         let current_web_target_y = 0;
         let web_following_mouse = false;
-        let space_was_pressed = false;
         const pull_strength = 0.60;  // Schwächer: 0.75 → 0.60
         
         // Swing-Rhythm System
@@ -550,19 +523,8 @@
                     mouseY > bottom_threshold
                 );
                 
-                // LEERTASTE: Sofortiger Netz-Schuss (überschreibt Timer!)
-                let force_shoot = false;
-                if (keyIsPressed && key === ' ') {
-                    if (!space_was_pressed && mouse_in_outer_area) {
-                        force_shoot = true;
-                    }
-                    space_was_pressed = true;
-                } else {
-                    space_was_pressed = false;
-                }
-                
-                // Automatisches Schießen nach Pause ODER manueller Schuss
-                if ((swing_timer >= swing_delay || force_shoot) && can_shoot_web && mouse_in_outer_area) {
+                // Automatisches Schießen nach Pause
+                if (swing_timer >= swing_delay && can_shoot_web && mouse_in_outer_area) {
                     // Berechne Richtung zur aktuellen Maus-Position
                     let dx = mouseX - star_x;
                     let dy = mouseY - star_y;
