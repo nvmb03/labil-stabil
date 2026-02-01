@@ -631,7 +631,7 @@
             }, 300);
         }
 
-        // Make windows draggable
+        // Make windows draggable (with mouse and touch support)
         const windows = document.querySelectorAll('.window');
         
         windows.forEach(window => {
@@ -644,14 +644,24 @@
             let xOffset = 0;
             let yOffset = 0;
 
+            // Mouse events
             titlebar.addEventListener('mousedown', dragStart);
             document.addEventListener('mousemove', drag);
             document.addEventListener('mouseup', dragEnd);
 
+            // Touch events
+            titlebar.addEventListener('touchstart', dragStart, { passive: false });
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+
             function dragStart(e) {
                 if (e.target === titlebar || titlebar.contains(e.target)) {
-                    initialX = e.clientX - xOffset;
-                    initialY = e.clientY - yOffset;
+                    // Get the correct client coordinates for both mouse and touch
+                    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+                    
+                    initialX = clientX - xOffset;
+                    initialY = clientY - yOffset;
 
                     isDragging = true;
                     
@@ -665,8 +675,12 @@
                 if (isDragging) {
                     e.preventDefault();
                     
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
+                    // Get the correct client coordinates for both mouse and touch
+                    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+                    
+                    currentX = clientX - initialX;
+                    currentY = clientY - initialY;
 
                     xOffset = currentX;
                     yOffset = currentY;
