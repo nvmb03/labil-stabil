@@ -13,7 +13,7 @@
         }
     </script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chicago&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -21,9 +21,20 @@
             padding: 0;
             box-sizing: border-box;
         }
+        :root {
+            --retro-panel: #FFFFFF;
+            --retro-border: #000000;
+            --retro-shadow: rgba(0, 0, 0, 0.35);
+            --retro-shadow-strong: rgba(0, 0, 0, 0.5);
+            --retro-text: #111111;
+            --accent: #FF6B6B;
+            --accent-dark: #C81314;
+        }
+
         body {
-            font-family: 'Space Mono', monospace;
+            font-family: 'Space Mono', 'Chicago', 'VT323', monospace;
             background: #fff;
+            color: var(--retro-text);
             overflow: hidden;
         }
         canvas {
@@ -33,26 +44,28 @@
         /* Icons */
         .icon-button {
             position: fixed;
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
+            width: 44px;
+            height: 44px;
+            background: var(--retro-panel);
+            border: 2px solid var(--retro-border);
+            color: var(--retro-text);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.15s;
             z-index: 1000;
             text-decoration: none;
-            backdrop-filter: blur(10px);
+            box-shadow: 4px 4px 0 var(--retro-shadow);
         }
         
         .icon-button:hover {
-            background: rgba(220, 20, 60, 0.9);
-            border-color: #dc143c;
-            transform: scale(1.1);
+            background: #000;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 6px 6px 0 var(--retro-shadow-strong);
         }
         
         #backButton {
@@ -70,19 +83,17 @@
             position: fixed;
             top: 80px;
             right: 20px;
-            width: 350px;
+            width: 360px;
             max-height: calc(100vh - 120px);
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid #dc143c;
-            border-left: 4px solid #dc143c;
-            padding: 25px;
-            color: #fff;
-            backdrop-filter: blur(10px);
+            background: var(--retro-panel);
+            border: 2px solid var(--retro-border);
+            box-shadow: 6px 6px 0 var(--retro-shadow);
+            color: var(--retro-text);
             z-index: 999;
-            overflow-y: auto;
-            transform: translateX(400px);
+            overflow: hidden;
+            transform: translateX(420px);
             opacity: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         #infoPanel.active {
@@ -90,31 +101,47 @@
             opacity: 1;
         }
         
-        #infoPanel h1 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            color: #dc143c;
-            letter-spacing: 2px;
+        .panel-titlebar {
+            height: 26px;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border-bottom: 2px solid var(--retro-border);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .panel-content {
+            padding: 18px 20px 22px;
+            overflow-y: auto;
+            max-height: calc(100vh - 170px);
         }
         
         #infoPanel h2 {
-            font-size: 14px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            color: #000;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         
         #infoPanel p {
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.7;
-            opacity: 0.9;
+            opacity: 0.95;
             margin-bottom: 12px;
         }
         
         #infoPanel strong {
-            color: #dc143c;
+            color: #000;
         }
         
         #infoPanel ul {
@@ -124,33 +151,60 @@
         }
         
         #infoPanel li {
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1.6;
             padding: 6px 0;
             padding-left: 20px;
             position: relative;
-            opacity: 0.85;
+            opacity: 0.9;
         }
         
         #infoPanel li:before {
             content: "→";
             position: absolute;
             left: 0;
-            color: #dc143c;
+            color: #000;
         }
         
         /* Scrollbar styling */
-        #infoPanel::-webkit-scrollbar {
+        .panel-content::-webkit-scrollbar {
             width: 6px;
         }
-        
-        #infoPanel::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+
+        .panel-content::-webkit-scrollbar-track {
+            background: #EFEFEF;
         }
-        
-        #infoPanel::-webkit-scrollbar-thumb {
-            background: #dc143c;
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #000;
             border-radius: 3px;
+        }
+
+        /* Traffic lights (retro) */
+        .traffic-lights {
+            display: flex;
+            gap: 4px;
+            margin-right: 8px;
+        }
+
+        .traffic-light {
+            width: 10px;
+            height: 10px;
+            border: 1px solid #000;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .traffic-light.close {
+            background: #FF5F57;
+        }
+
+        .traffic-light.minimize {
+            background: #FFBD2E;
+        }
+
+        .traffic-light.maximize {
+            background: #28CA42;
         }
         
         /* Animation */
@@ -191,16 +245,24 @@
     
     <!-- Info Panel -->
     <div id="infoPanel">
-        <h1>SPIDER-MAN</h1>
+        <div class="panel-titlebar">
+            <div class="traffic-lights">
+                <div class="traffic-light close"></div>
+                <div class="traffic-light minimize"></div>
+                <div class="traffic-light maximize"></div>
+            </div>
+            <div class="panel-title">SPIDER-MAN</div>
+        </div>
+        <div class="panel-content">
+            <h2>Stabil</h2>
+            <p>Spider-Man schwingt mit präziser Eleganz. Seine Netze zeichnen klare Bögen, jeder Impuls ist kontrolliert. Seine Stärke ist die perfekte Verbindung von Tempo und Richtung.</p>
 
-        <h2>Stabil</h2>
-        <p>Spider-Man schwingt mit präziser Eleganz. Seine Netze zeichnen klare Bögen, jeder Impuls ist kontrolliert. Seine Stärke ist die perfekte Verbindung von Tempo und Richtung.</p>
+            <h2>Labil: Neurodivergenz (ADHS/Impulsivität)</h2>
+            <p>Plötzlich zündet der Impuls: Er wird schneller, wilder, scheinbar grenzenlos. Die Superkraft überdreht – Netze schießen zu früh, Richtungen kippen, der Schwung zerfällt. Die Kontrolle ist weg, der Raum wird gefährlich.</p>
 
-        <h2>Labil: Neurodivergenz (ADHS/Impulsivität)</h2>
-        <p>Plötzlich zündet der Impuls: Er wird schneller, wilder, scheinbar grenzenlos. Die Superkraft überdreht – Netze schießen zu früh, Richtungen kippen, der Schwung zerfällt. Die Kontrolle ist weg, der Raum wird gefährlich.</p>
-
-        <h2>Die Tragik – und Stärke</h2>
-        <p>Seine Neurodivergenz ist sein doppeltes Schwert. Sie treibt seine Kraft ins Übermenschliche – und reißt ihm zugleich die Steuerung aus der Hand. Superkraft und Verletzlichkeit sind eins.</p>
+            <h2>Die Tragik – und Stärke</h2>
+            <p>Seine Neurodivergenz ist sein doppeltes Schwert. Sie treibt seine Kraft ins Übermenschliche – und reißt ihm zugleich die Steuerung aus der Hand. Superkraft und Verletzlichkeit sind eins.</p>
+        </div>
     </div>
 
     <script>
