@@ -168,6 +168,7 @@
             cursor: grab;
             border-top-left-radius: 3px;
             border-top-right-radius: 3px;
+            position: relative;
         }
 
         .window-titlebar:active {
@@ -204,9 +205,12 @@
         .window-title {
             font-size: 11px;
             font-weight: bold;
-            flex-grow: 1;
+            position: absolute;
+            left: 0;
+            right: 0;
             text-align: center;
             letter-spacing: 1px;
+            pointer-events: none;
         }
 
         /* Window Content - Improved Layout */
@@ -477,6 +481,9 @@
         <div class="menubar-item" id="viewMenu">
             View
             <div class="dropdown-menu" id="viewDropdown">
+                <div class="dropdown-item">
+                    <strong>Dozent:</strong> Prof. Ben Santo
+                </div>
                 <div class="dropdown-item">
                     <strong>Designer:</strong> Nam Nguyen Danh
                 </div>
