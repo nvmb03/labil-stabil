@@ -10,6 +10,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         :root {
@@ -663,6 +667,7 @@
 
             function dragStart(e) {
                 if (e.target === titlebar || titlebar.contains(e.target)) {
+                    e.preventDefault();
                     // Get the correct client coordinates for both mouse and touch
                     const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
                     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
