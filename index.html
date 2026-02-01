@@ -153,8 +153,8 @@
             border: 2px solid var(--retro-border);
             box-shadow: 6px 6px 0 var(--retro-shadow);
             cursor: move;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
             border-radius: 3px;
+            will-change: transform;
         }
 
         .window:hover {
@@ -654,6 +654,7 @@
             let initialY;
             let xOffset = 0;
             let yOffset = 0;
+            let animationId;
 
             // Mouse events
             titlebar.addEventListener('mousedown', dragStart);
@@ -697,7 +698,13 @@
                     xOffset = currentX;
                     yOffset = currentY;
 
-                    setTranslate(currentX, currentY, window);
+                    // Use requestAnimationFrame for smoother movement
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
+                    animationId = requestAnimationFrame(() => {
+                        setTranslate(currentX, currentY, window);
+                    });
                 }
             }
 
@@ -709,7 +716,7 @@
             }
 
             function setTranslate(xPos, yPos, el) {
-                el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+                el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
             }
         });
     </script>
