@@ -154,6 +154,7 @@
             box-shadow: 6px 6px 0 var(--retro-shadow);
             cursor: move;
             border-radius: 3px;
+            overflow: hidden;
             will-change: transform;
         }
 
@@ -170,8 +171,8 @@
             align-items: center;
             padding: 0 6px;
             cursor: grab;
-            border-top-left-radius: 3px;
-            border-top-right-radius: 3px;
+            border-top-left-radius: 1px;
+            border-top-right-radius: 1px;
             position: relative;
         }
 
@@ -656,6 +657,17 @@
             let yOffset = 0;
             let animationId;
 
+            // Bring window to front on any click
+            window.addEventListener('mousedown', function(e) {
+                windows.forEach(w => w.style.zIndex = '1');
+                window.style.zIndex = '10';
+            });
+
+            window.addEventListener('touchstart', function(e) {
+                windows.forEach(w => w.style.zIndex = '1');
+                window.style.zIndex = '10';
+            });
+
             // Mouse events
             titlebar.addEventListener('mousedown', dragStart);
             document.addEventListener('mousemove', drag);
@@ -677,10 +689,6 @@
                     initialY = clientY - yOffset;
 
                     isDragging = true;
-                    
-                    // Bring to front
-                    windows.forEach(w => w.style.zIndex = '1');
-                    window.style.zIndex = '10';
                 }
             }
 
